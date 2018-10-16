@@ -1,0 +1,15 @@
+[workspace]
+members = [
+ "src/common",
+ "src/lsw2"
+]
+
+[package]
+name = "opensrme"
+version = "0.0.1"
+authors = ["tzizi"]
+
+[dependencies]
+"opensrme_common" = { path = "src/common" }
+"opensrme_lsw2" = { path = "src/lsw2" }
+"opensrme_sr2" = { path = "src/sr2" }

@@ -1,0 +1,18 @@
+[package]
+name = "opensrme_common"
+version = "0.0.1"
+authors = ["tzizi"]
+
+[dependencies]
+byteorder = "1"
+regex = "1"
+#piston_window = "0.81.0"
+image = "*"
+
+[dependencies.sdl2]
+version = "*"
+features = ["unsafe_textures"]
+
+[lib]
+name = "opensrme_common"
+path = "src/lib.rs"

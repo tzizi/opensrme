@@ -1,0 +1,12 @@
+[package]
+name = "opensrme_sr2"
+version = "0.0.1"
+authors = ["tzizi"]
+
+[dependencies]
+"opensrme_common" = { path = "../common" }
+encoding = "0.2"
+
+[lib]
+name = "opensrme_sr2"
+path = "src/lib.rs"

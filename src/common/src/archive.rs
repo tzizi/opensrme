@@ -17,8 +17,12 @@ pub struct FilesystemArchive {
   root: String
 }
 
+fn remove_leading_slash(path: &str) -> String {
+  String::from(String::from(path).trim_left_matches('/'))
+}
+
 fn get_fullpath(path1: &str, path: &str) -> std::ffi::OsString {
-  std::path::PathBuf::from(path1).join(path).into_os_string()
+  std::path::PathBuf::from(path1).join(remove_leading_slash(path)).into_os_string()
 }
 
 

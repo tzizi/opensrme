@@ -14,7 +14,9 @@ pub struct SDL2Platform {
   sdl_canvas: sdl2::render::Canvas<sdl2::video::Window>,
   texture_creator: sdl2::render::TextureCreator<sdl2::video::WindowContext>,
 
-  textures: HashMap<PlatformId, sdl2::render::Texture>
+  textures: HashMap<PlatformId, sdl2::render::Texture>,
+
+  offset: Vec2i
 }
 
 
@@ -26,6 +28,14 @@ static kv_table: &'static [u8] = &[
 
 fn key_to_ascii(key: sdl2::keyboard::Keycode) -> u8 {
   let code = key as u32;
+
+  if code < 256 {
+    return code as u8;
+  } else {
+    return 0;
+  }
+
+  println!("{} {}", code, kv_table.len());
 
   if (code as usize) < kv_table.len() {
     kv_table[code as usize]
@@ -78,6 +88,12 @@ fn get_event(event: SEvent) -> Option<Event> {
     SEvent::KeyUp { keycode, scancode, .. }   => return key_event(false, keycode, scancode),
     SEvent::MouseButtonDown { mouse_btn, .. } => mouseb_event(true, mouse_btn),
     SEvent::MouseButtonUp { mouse_btn, .. }   => mouseb_event(false, mouse_btn),
+    SEvent::MouseMotion { x, y, xrel, yrel, .. } => {
+      Event::MousePos {
+        pos: Vec2i::new(x, y),
+        delta: Vec2i::new(xrel, yrel)
+      }
+    },
     _                                         => return None
   })
 }
@@ -106,7 +122,8 @@ impl Platform for SDL2Platform {
       sdl_events: eventpump,
       sdl_canvas: canvas,
       texture_creator: texture_creator,
-      textures: HashMap::new()
+      textures: HashMap::new(),
+      offset: Vec2i::new(0, 0)
     }
   }
 
@@ -145,15 +162,27 @@ impl Platform for SDL2Platform {
     }
   }
 
-  fn clear(&mut self, color: Color) {
+  fn reset(&mut self) {
+    self.offset.x = 0;
+    self.offset.y = 0;
+  }
+
+  fn translate(&mut self, pos: Vec2i) {
+    self.offset = self.offset + pos;
+  }
+
+  fn set_color(&mut self, color: Color) {
     self.sdl_canvas.set_draw_color(sdl2::pixels::Color::RGBA(color.r, color.g, color.b, color.a));
+  }
+
+  fn clear(&mut self) {
     self.sdl_canvas.clear();
   }
 
   fn draw_region(&mut self, image: &PlatformId,
                  x_src: IScalar, y_src: IScalar,
                  width: IScalar, height: IScalar,
-                 flip: Option<Flip>,
+                 flip: Flip,
                  rotate: Option<Rotate>,
                  x_dest: IScalar, y_dest: IScalar) {
     if let Some(image) = self.textures.get(image) {
@@ -162,20 +191,6 @@ impl Platform for SDL2Platform {
       if let Some(rotate) = rotate {
         angle = rotate.angle * 360.0;
         center = Some(sdl2::rect::Point::new(rotate.origin.x, rotate.origin.y));
-      }
-
-      let mut flip_horizontal = false;
-      let mut flip_vertical = false;
-
-      if let Some(flip) = flip {
-        match flip {
-          Flip::Horizontal => flip_horizontal = true,
-          Flip::Vertical => flip_vertical = true,
-          Flip::Both => {
-            flip_horizontal = true;
-            flip_vertical = true;
-          }
-        }
       }
 
       let mut width: u32 = width as u32;
@@ -189,10 +204,16 @@ impl Platform for SDL2Platform {
         height = query.height;
       }
 
+      //let src = sdl2::rect::Rect::new(x_src, y_src, (width as i32 + x_src) as u32, (height as i32 + y_src) as u32);
+      //let dst = sdl2::rect::Rect::new(x_dest, y_dest, (width as i32 + x_dest) as u32, (height as i32 + y_dest) as u32);
       let src = sdl2::rect::Rect::new(x_src, y_src, width, height);
-      let dst = sdl2::rect::Rect::new(x_dest, y_dest, width, height);
-      self.sdl_canvas.copy_ex(image, src, dst, angle, center, flip_horizontal, flip_vertical);
+      let dst = sdl2::rect::Rect::new(x_dest + self.offset.x, y_dest + self.offset.y, width, height);
+      self.sdl_canvas.copy_ex(image, src, dst, angle, center, (flip & FLIP_H) != 0, (flip & FLIP_V) != 0).unwrap();
     }
+  }
+
+  fn fill_rect(&mut self, x: IScalar, y: IScalar, width: IScalar, height: IScalar) {
+    self.sdl_canvas.fill_rect(Some(sdl2::rect::Rect::new(x + self.offset.x, y + self.offset.y, width as u32, height as u32))).unwrap();
   }
 
   fn swap(&mut self) {

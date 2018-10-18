@@ -1,4 +1,5 @@
 use std::io::*;
+use super::archive::*;
 use super::types::*;
 pub type PlatformId = usize;
 
@@ -24,11 +25,13 @@ impl IdCache {
   }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Key {
   pub value: u8,
   pub scancode: i32
 }
 
+#[derive(Debug, PartialEq)]
 pub enum MouseButton {
   Unknown,
   Left,
@@ -36,11 +39,13 @@ pub enum MouseButton {
   Middle
 }
 
+#[derive(Debug, PartialEq)]
 pub enum MouseScroll {
   Up,
   Down
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Event {
   Quit,
   Key {
@@ -53,15 +58,14 @@ pub enum Event {
   },
   MouseScroll(MouseScroll),
   MousePos {
-    pos: Vec2i
+    pos: Vec2i,
+    delta: Vec2i
   }
 }
 
-pub enum Flip {
-  Horizontal,
-  Vertical,
-  Both
-}
+pub const FLIP_H: u8 = 1;
+pub const FLIP_V: u8 = 2;
+pub type Flip = u8;
 
 pub struct Rotate {
   pub angle: FScalar, // 0 = no rotation, 1 = 360
@@ -69,7 +73,7 @@ pub struct Rotate {
 }
 
 pub trait Platform {
-  fn new(title: &str, width: i16, height: i16) -> Self;
+  fn new(title: &str, width: i16, height: i16) -> Self where Self: Sized;
   fn close_window(&mut self);
   //fn wait_event(&mut self, window: PlatformId);
   fn poll_event(&mut self) -> Option<Event>;
@@ -87,15 +91,34 @@ pub trait Platform {
       0
     }
   }
+  fn load_image_from_filename(&mut self, archive: &Archive, image: &str) -> PlatformId {
+    let mut bytes = vec![];
+
+    if let Ok(mut file) = archive.open_file(image) {
+      if let Ok(_) = file.read_to_end(&mut bytes) {
+        self.load_image(&bytes[..])
+      } else {
+        0
+      }
+    } else {
+      0
+    }
+  }
   fn unload_image(&mut self, image: PlatformId);
 
-  fn clear(&mut self, color: Color);
+  fn reset(&mut self);
+  fn translate(&mut self, pos: Vec2i);
+  //fn scale(&mut self, scale: Vec2i);
+
+  fn set_color(&mut self, color: Color);
+  fn clear(&mut self);
   fn draw_region(&mut self, image: &PlatformId,
                  x_src: IScalar, y_src: IScalar,
                  width: IScalar, height: IScalar,
-                 flip: Option<Flip>,
+                 flip: Flip,
                  rotate: Option<Rotate>,
                  x_dest: IScalar, y_dest: IScalar);
+  fn fill_rect(&mut self, x: IScalar, y: IScalar, width: IScalar, height: IScalar);
 
   fn swap(&mut self);
 }

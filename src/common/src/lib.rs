@@ -22,3 +22,6 @@ pub use platform::*;
 
 mod platform_sdl;
 pub use platform_sdl::*;
+
+mod time;
+pub use time::*;

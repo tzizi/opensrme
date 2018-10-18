@@ -1,5 +1,8 @@
 use opensrme_common::*;
 
+pub type Id = i32;
+pub type SpriteId = i16;
+
 #[derive(Debug)]
 pub struct Palette {
   pub colors: Vec<Color>
@@ -21,7 +24,7 @@ pub struct Language {
   pub fontid: i16
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum DrawShape {
   Line,
   FillRect,
@@ -30,7 +33,7 @@ pub enum DrawShape {
   DrawArc
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum DrawCommand {
   Invalid,
 
@@ -81,4 +84,45 @@ pub enum DrawCommand {
 pub struct Sprite {
   pub aabb: Vec<i16>,
   pub draw: Vec<DrawCommand>
+}
+
+
+#[derive(Debug)]
+pub struct PaletteImage {
+  pub filename: String,
+  pub image: PlatformId
+}
+
+#[derive(Debug)]
+pub struct DataContext {
+  pub palettes: Vec<Palette>,
+  pub fonts: Vec<Font>,
+  pub languages: Vec<Language>,
+  pub images: Vec<String>,
+  pub sprites: Vec<Sprite>
+}
+
+#[derive(Debug)]
+pub struct LevelLayer {
+  pub start: Vec2i,
+  pub tilesize: Vec2i,
+  pub size: Vec2i,
+  pub tiles: Vec<i16>
+}
+
+#[derive(Debug)]
+pub struct Level {
+  pub layer1: LevelLayer,
+  pub layer2: LevelLayer,
+  pub unk1: u16,
+  pub unk1_data: Vec<i16>
+}
+
+pub struct Context {
+  pub platform: Box<Platform>,
+  pub time: Time,
+  pub delta: Time,
+  pub data: DataContext,
+  pub images: Vec<PaletteImage>,
+  pub levels: Vec<Level>
 }

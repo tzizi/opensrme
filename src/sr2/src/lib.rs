@@ -1,284 +1,19 @@
 extern crate opensrme_common;
-#[macro_use]
-use opensrme_common::*;
 extern crate encoding;
-use encoding::{Encoding, DecoderTrap};
-use encoding::all::ISO_8859_1;
-use std::io;
-use std::io::Read;
 
 mod types;
 use types::*;
-
 mod sprite;
-use sprite::*;
-
-fn read_palettes<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Palette>> {
-  let palette_amt = file.read_short()?;
-
-  let mut palettes = vec![];
-
-  for i in 0..palette_amt {
-    let size = file.readInt()?;
-    let elements = size / 3;
-
-    let mut palette = Palette {
-      colors: vec![]
-    };
-
-    for j in 0..elements {
-      palette.colors.push(Color {
-        r: file.read_unsigned_byte()?,
-        g: file.read_unsigned_byte()?,
-        b: file.read_unsigned_byte()?,
-        a: 255
-      });
-    }
-
-    palettes.push(palette);
-  }
-
-  Ok(palettes)
-}
-
-fn read_fonts<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Font>> {
-  let font_amt = file.read_short()?;
-
-  let mut fonts = vec![];
-
-  let mut font_names = vec![];
-  let mut font_widths = vec![];
-  let mut font_offsets = vec![];
-  let mut font_size_additions = vec![];
-
-  for i in 0..font_amt {
-    font_names.push(file.read_utf()?);
-
-    font_widths.push(vec![]);
-    font_offsets.push(vec![]);
-    font_size_additions.push(0);
-
-    let styles = file.read_short()?;
-
-    for j in 0..styles {
-      file.skip(4)?;
-
-      font_widths[i as usize].push(vec![]);
-      font_offsets[i as usize].push(vec![]);
-
-      font_size_additions[i as usize] = file.read_short()?;
-
-      for _k in 0..256 {
-        font_offsets[i as usize][j as usize].push(file.read_short()?);
-        font_widths[i as usize][j as usize].push(file.read_short()? - font_size_additions[i as usize]);
-      }
-    }
-  }
-
-  let font_amt = file.read_short()?;
-
-  for _i in 0..font_amt {
-    let font_id = file.readInt()? as usize;
-    let palette_id = file.readInt()?;
-
-    let mut font = Font {
-      name: font_names[font_id].clone(),
-      palette: palette_id,
-
-      height: -1,
-      widths: font_widths[font_id].clone(),
-      offsets: font_offsets[font_id].clone(),
-      size_addition: font_size_additions[font_id]
-    };
-
-    fonts.push(font);
-  }
-
-  Ok(fonts)
-}
-
-fn read_latin1_string<T: DataInputStream>(file: &mut T) -> io::Result<String> {
-  let string_len = file.read_short()?;
-
-  let array = file.read_amount_as_u8(string_len as usize)?;
-  if let Ok(result) = ISO_8859_1.decode(&array[..], DecoderTrap::Replace) {
-    Ok(result)
-  } else {
-    Err(io::Error::new(io::ErrorKind::Other, "Encoding error"))
-  }
-  //println!("{} {:?}", j, language.strings[j as usize]);
-}
-
-fn read_strings<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Language>> {
-  let languages_amt = file.read_short()?;
-
-  let languages = vec![];
-
-  for i in 0..languages_amt {
-    file.skip(4)?;
-
-    let mut language = Language {
-      strings: vec![],
-      fontid: 0
-    };
-
-    let strings_amt = file.read_short()?;
-    for j in 0..strings_amt {
-      language.strings.push(read_latin1_string(file)?);
-    }
-
-    language.fontid = file.read_short()?;
-  }
-
-  Ok(languages)
-}
-
-fn read_sprites<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Sprite>> {
-  let images_amt = file.read_short()?;
-
-  let mut sprite_info_offsets = vec![];
-  let mut aabbs = vec![];
-
-  for i in 0..images_amt {
-    aabbs.push(vec! [
-      file.read_short()?,
-      file.read_short()?,
-      file.read_short()?,
-      file.read_short()?
-    ]);
-
-    sprite_info_offsets.push(file.read_short()?);
-  }
-
-  let mut sprite_infos = vec![];
-  for i in 0..sprite_info_offsets[images_amt as usize - 1] {
-    sprite_infos.push(file.read_short()?);
-  }
-
-  let mut image_names = vec![];
-  let image_names_amt = file.read_short()?;
-  for i in 0..image_names_amt {
-    image_names.push(file.read_utf()?);
-  }
-
-  let mut sprites = vec![];
-
-  let mut last_i: i64 = -1;
-  let mut sprite_id = 0;
-  for i in sprite_info_offsets.iter() {
-    sprite_id += 1;
-
-    if last_i >= 0 {
-      println!("{} {}", last_i, *i);
-      let newvec = sprite_infos[last_i as usize..*i as usize].to_vec();
-
-      sprites.push(create_sprite(newvec, aabbs[sprite_id - 2].clone()));
-
-      /*
-        let mut j = 0;
-        let mut flags = 0;
-        // 1 = mirror/fliph
-        // 2 = mirror_rot180/flipv
-        // (3 = rot180 without mirroring)
-        // 4 = don't show (blink)
-
-        let mut x_add = 0;
-        let mut y_add = 0;
-
-        while j < newvec.len() {
-          let current = j;
-          j += 1;
-
-          match newvec[current] & 0xff {
-            0 => {
-              println!("  image id: {} {:?}", newvec[current] >> 8, image_names[(newvec[current] >> 8) as usize]);
-
-              if j + 2 <= newvec.len() {
-                println!("  crop: {} {}", newvec[j], newvec[j + 1]);
-              }
-
-              j += 2;
-            },
-            1 => {
-              flags ^= 1;
-            },
-            2 => {
-              flags ^= 2;
-            },
-            3 => {
-              let mut ournum = 0;
-
-              if (flags & 1) != 0 {
-                ournum = -sprite_infos[j];
-                j += 1;
-              } else {
-                ournum = sprite_infos[j];
-                j += 1;
-              }
-
-              x_add = ournum;
-
-              let mut ournum1 = 0;
-              if (flags & 2) != 0 {
-                ournum1 = -sprite_infos[j];
-                j += 1;
-              } else {
-                ournum1 = sprite_infos[j];
-                j += 1;
-              }
-
-              y_add = ournum1;
-            },
-            4 => {
-              if (flags & 4) != 0 {
-                j += 1;
-                continue;
-              }
-
-
-            },
-            _ => {
-            }
-          }
-       }*/
-
-      //println!("{:?} {} {:?}", newvec, newvec[0] & 0xff, image_names[(newvec[0] >> 8) as usize]);
-    }
-
-    last_i = *i as i64;
-  }
-
-  if false {
-    // likely not needed? seems to return nil for newvec
-    let newvec = sprite_infos[last_i as usize..sprite_infos.len()].to_vec();
-    sprites.push(create_sprite(newvec, aabbs[sprite_id - 1].clone()));
-  }
-
-  sprite_id = 0;
-  for sprite in sprites.iter() {
-    println!("{}", sprite_id);
-
-    for command in sprite.draw.iter() {
-      println!("  {:?}", command);
-    }
-
-    sprite_id += 1;
-  }
-
-  Ok(sprites)
-}
-
-fn read_bin_all(archive: &Archive) -> io::Result<()> {
-  let mut contents = archive.open_file("bin.all")?;
-
-  read_palettes(&mut contents).unwrap();
-  read_fonts(&mut contents).unwrap();
-  read_strings(&mut contents).unwrap();
-  read_sprites(&mut contents).unwrap();
-
-  Ok(())
-}
-
+mod bin_all;
+use bin_all::*;
+mod level;
+use level::*;
+
+#[macro_use]
+use opensrme_common::*;
+
+use std::io;
+use std::io::Read;
 
 pub fn check(archive: &Archive) -> io::Result<bool> {
   let manifest = archive.get_manifest()?;
@@ -288,41 +23,117 @@ pub fn check(archive: &Archive) -> io::Result<bool> {
 }
 
 pub fn main(archive: &Archive, args: Vec<String>) {
-  read_bin_all(archive).unwrap();
+  let mut platform = SDL2Platform::new("Saints Row 2", 800, 800);
 
-  let mut platform = SDL2Platform::new("Saints Row 2", 640, 480);
+  let splash = platform.load_image_from_filename(archive, "Title.png");
+  platform.set_color(Color { r: 0, g: 0, b: 0, a: 255 });
+  platform.clear();
+  platform.draw_region(&splash, 0, 0, 240, 300, 0, None, 0, 10);
+  platform.swap();
 
-  let mut bytes = vec![];
-  archive.open_file("Car_Police.png").unwrap().read_to_end(&mut bytes).unwrap();
-  let image = platform.load_image(&bytes[..]);
+  let datacontext = read_bin_all(archive).unwrap();
+
+  let mut images = vec![];
+  for i in datacontext.images.iter() {
+    println!("{}", i);
+    images.push(PaletteImage {
+      filename: i.clone(),
+      image: platform.load_image_from_filename(archive, &i[..])
+    });
+  }
+
+  let level = read_level(&mut archive.open_file("SonsOfSamedi.lvl").unwrap()).unwrap();
+  println!("{:?}", level);
+
+  let mut context = Context {
+    platform: Box::new(platform),
+    time: instant_get_millis(),
+    delta: 0,
+    data: datacontext,
+    images,
+    levels: vec![]
+  };
+
+  let image = context.platform.load_image_from_filename(archive, "Car_Police.png");
 
   let mut running = true;
   let mut x = 0;
+  let mut current_sprite: i32 = 393;
+  let mut leftpressed = false;
+  let mut offset = Vec2i::new(0, 0);
+
+  let mut last_second = context.time;
+  let mut fps = 0;
   while running {
-    while let Some(event) = platform.poll_event() {
+    let lasttime = context.time;
+    context.time = instant_get_millis();
+    context.delta = context.time - lasttime;
+
+    while let Some(event) = context.platform.poll_event() {
       match event {
         Event::Quit => {
           running = false;
           break
         },
-        Event::Key { key, .. } => {
-          if key.scancode == 41 {
-            // esc
-            running = false;
-            break;
+        Event::Key { key, pressed } => {
+          if !pressed {
+            if key.scancode == 41 {
+              // esc
+              running = false;
+              break;
+            }
+
+            if key.value == 'a' as u8 {
+              current_sprite -= 1;
+              println!("{} {:?}", current_sprite, context.data.sprites[current_sprite as usize]);
+            } else if key.value == 'd' as u8 {
+              current_sprite += 1;
+              println!("{} {:?}", current_sprite, context.data.sprites[current_sprite as usize]);
+            }
           }
-        }
+        },
+        Event::MouseButton { pressed, button } => {
+          if button == MouseButton::Left {
+            leftpressed = pressed;
+          }
+        },
+        Event::MousePos { delta, .. } => {
+          if leftpressed {
+            offset = offset + delta;
+          }
+        },
         _ => {}
       }
     }
 
-    x += 3;
+    x += 5;
     x = x % 500;
 
-    platform.clear(Color { r: 0, g: 0, b: 0, a: 255 });
-    platform.draw_region(&image, 0, 0, x, x, None, None, 0, 0);
-    platform.swap();
-    std::thread::sleep(std::time::Duration::from_millis(16));
+    context.platform.set_color(Color { r: 0, g: 0, b: 0, a: 255 });
+    context.platform.clear();
+    context.platform.reset();
+
+    context.platform.translate(offset);
+    //context.platform.draw_region(&image, 0, 0, x, x, 0, None, 50, 10);
+    //sprite::draw_sprite(&mut context, current_sprite, Vec2i::new(400, 400), 0);
+    draw_level_layer(&mut context, &level.layer1);
+    draw_level_layer(&mut context, &level.layer2);
+    context.platform.swap();
+
+    if context.time - last_second >= 1000 {
+      last_second = context.time;
+      println!("{}", fps);
+      fps = 0;
+    } else {
+      fps += 1;
+    }
+
+    let mut sleep = 16;
+    let millis = instant_get_millis() - context.time;
+    if millis < sleep {
+      sleep -= millis;
+      std::thread::sleep(std::time::Duration::from_millis(sleep));
+    }
   }
 
 }

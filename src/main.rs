@@ -6,6 +6,8 @@ extern crate opensrme_sr2;
 use opensrme_common::*;
 
 fn main() {
+  opensrme_common::instant_init();
+
   let args: Vec<String> = std::env::args().collect();
   if args.len() < 2 {
     println!("Provide archive");

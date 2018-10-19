@@ -247,7 +247,7 @@ def read_quests():
         #     4 = complete
         # 1 = person giving the quest (tid)
         # 2 = ?
-        # 3 = ?
+        # 3 = person sprite id
         # 4 = quest name (tid)
         # 5 = quest description (tid)
         # 6 = ?

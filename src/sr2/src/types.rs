@@ -115,7 +115,11 @@ pub struct Level {
   pub layer1: LevelLayer,
   pub layer2: LevelLayer,
   pub unk1: u16,
-  pub unk1_data: Vec<i16>
+  pub unk1_data: Vec<i16>,
+  pub unk2: i32,
+  pub unk3: i32,
+  pub tiledata_size: Vec2i,
+  pub tiledata: Vec<i8>
 }
 
 pub struct Context {

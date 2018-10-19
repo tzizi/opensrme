@@ -42,7 +42,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
     });
   }
 
-  let level = read_level(&mut archive.open_file("SonsOfSamedi.lvl").unwrap()).unwrap();
+  let level = read_level(&mut archive.open_file("Street.lvl").unwrap()).unwrap();
   println!("{:?}", level);
 
   let mut context = Context {
@@ -58,7 +58,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
   let mut running = true;
   let mut x = 0;
-  let mut current_sprite: i32 = 393;
+  let mut current_sprite: SpriteId = 1359;
   let mut leftpressed = false;
   let mut offset = Vec2i::new(0, 0);
 
@@ -115,14 +115,18 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
     context.platform.translate(offset);
     //context.platform.draw_region(&image, 0, 0, x, x, 0, None, 50, 10);
-    //sprite::draw_sprite(&mut context, current_sprite, Vec2i::new(400, 400), 0);
+
     draw_level_layer(&mut context, &level.layer1);
+    draw_shadows(&mut context, &level);
     draw_level_layer(&mut context, &level.layer2);
+
+    sprite::draw_sprite(&mut context, current_sprite, Vec2i::new(50, 50), 0);
+
     context.platform.swap();
 
     if context.time - last_second >= 1000 {
       last_second = context.time;
-      println!("{}", fps);
+      //println!("{}", fps);
       fps = 0;
     } else {
       fps += 1;

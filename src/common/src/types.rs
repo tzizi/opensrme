@@ -26,6 +26,15 @@ impl Color {
       a: ((rgba >> 24) & 0xff) as u8
     }
   }
+
+  pub fn from_bgr(bgr: u32) -> Self {
+    Color {
+      b: ((bgr >> 0)  & 0xff) as u8,
+      g: ((bgr >> 8)  & 0xff) as u8,
+      r: ((bgr >> 16) & 0xff) as u8,
+      a: 255
+    }
+  }
 }
 
 #[derive(Debug)]

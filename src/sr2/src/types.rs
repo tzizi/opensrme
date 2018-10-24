@@ -2,6 +2,9 @@ use opensrme_common::*;
 
 pub type Id = i32;
 pub type SpriteId = i16;
+pub type TextId = Id;
+pub type ClipId = Id;
+pub type EffectId = Id;
 
 #[derive(Debug)]
 pub struct Palette {
@@ -56,7 +59,7 @@ pub enum DrawCommand {
   },
 
   // 4
-  DrawSprite(i16),
+  DrawSprite(SpriteId),
 
   // 5
   SetFrame {
@@ -93,13 +96,141 @@ pub struct PaletteImage {
   pub image: PlatformId
 }
 
+// [orientation][frames]
+pub type Clip = Vec<Vec<SpriteId>>;
+
+#[derive(Debug)]
+pub struct Sound {
+  pub filename: String,
+  pub mime: String,
+  pub priority: i32,
+  pub deferred_load: bool
+}
+
+#[derive(Debug)]
+pub struct Item {
+  // 0: weapon
+  // 1: food
+  // 2: addon (gear, durability, colors)
+  pub itemtype: i32,
+  pub price: i32,
+  pub increment: i32,
+  pub maximum: i32,
+  pub name: TextId,
+  pub description: TextId,
+  pub sprite: SpriteId
+}
+
+#[derive(Debug)]
+pub struct Quest {
+  // 1 = ?
+  // 2 = active
+  // 4 = complete
+  //pub state: i32
+  pub giver: TextId,
+  pub is_mission_start: bool,
+  pub giver_sprite: SpriteId,
+  pub name: TextId,
+  pub description: TextId,
+  pub levelid: i32
+}
+
+#[derive(Debug)]
+pub struct Gang {
+  pub name: TextId,
+  pub sprite: SpriteId,
+  pub notoriety_bar_sprite: SpriteId,
+  pub default_notoriety: i8,
+  pub unk1: i32
+}
+
+#[derive(Debug)]
+pub struct EffectSpawner {
+  pub effect: EffectId,
+  pub delay: u16,
+  pub position: [i32; 3]
+}
+
+#[derive(Debug)]
+pub enum EffectModifierOperation {
+  // values[0] = multiplier (* secs_elapsed)
+  // values[1] = offset
+  // variable0 = (values[0] * seconds) + values[1];
+  Linear,
+  // values[0] = angle
+  // values[1] = multiplier (* secs_elapsed)
+  // variable0: x
+  // variable1: y
+  // variable0 = (values[1] * seconds) * cos(values[0]);
+  // variable1 = (values[1] * seconds) * sin(values[0]);
+  MoveXY,
+  // values[0] = width of curve (or total time)
+  // values[1] = height of curve (or intensity)
+  // values[2] = curve offset (positive = shorter, negative = delay before the curve)
+  // values[3] = additional offset (adds to the final result)
+  // variable0 = (4*(values[1]/values[0]) - (4*(values[1]/values[0])/values[0]) * (values[2] + seconds)) * (values[2] + seconds) + values[3]
+  Curve,
+  // values[0] speed (amount of bounces, 1 = one bounce per pi, 2 = pi/2)
+  // values[1] intensity (how high)
+  // values[2] decay/gravity (negative values decay, positive values increase, the larger the value in either direction, the more intense the decay/increase)
+  // variable0 = (values[1] * abs(sin(values[0] * seconds))) * exp(values[2] * seconds);
+  Bounce
+}
+
+#[derive(Debug)]
+pub struct EffectModifierInfo {
+  pub operation: EffectModifierOperation,
+  pub time_addition: i32, // always 0?
+  // 0: x
+  // 1: y,
+  // 2: y subtraction (y - this)
+  pub variable0: i32,
+  pub variable1: i32
+}
+
+#[derive(Debug)]
+pub struct EffectModifier {
+  pub effect: EffectId,
+  pub values: Vec<Vec<f32>>,
+  pub infos: Vec<EffectModifierInfo>
+}
+
+#[derive(Debug)]
+pub enum EffectType {
+  Clip(ClipId), // 0
+  Spawner(Vec<EffectSpawner>), // 1
+  Modifier(EffectModifier), // 2
+  Square { // 3
+    color: Color,
+    size: u8
+  },
+  Line { //4
+    color: Color,
+    size: i32
+  }
+}
+
+#[derive(Debug)]
+pub struct Effect {
+  pub should_be_2: i32,
+  pub unk1: i32,
+  pub animation_time: u16,
+  pub effect_type: EffectType
+}
+
 #[derive(Debug)]
 pub struct DataContext {
   pub palettes: Vec<Palette>,
   pub fonts: Vec<Font>,
   pub languages: Vec<Language>,
   pub images: Vec<String>,
-  pub sprites: Vec<Sprite>
+  pub sprites: Vec<Sprite>,
+  pub clips: Vec<Clip>,
+  pub sounds: Vec<Sound>,
+  pub items: Vec<Item>,
+  pub quests: Vec<Quest>,
+  pub gangs: Vec<Gang>,
+  pub effects: Vec<Effect>
 }
 
 #[derive(Debug)]
@@ -119,7 +250,8 @@ pub struct Level {
   pub unk2: i32,
   pub unk3: i32,
   pub tiledata_size: Vec2i,
-  pub tiledata: Vec<i8>
+  pub tiledata: Vec<i8>,
+  pub tile_gangdata: Vec<i8>
 }
 
 pub struct Context {

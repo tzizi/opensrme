@@ -165,80 +165,10 @@ fn read_sprites<T: DataInputStream>(file: &mut T, context: &mut DataContext) -> 
     sprite_id += 1;
 
     if last_i >= 0 {
-      println!("{} {}", last_i, *i);
+      //println!("{} {}", last_i, *i);
       let newvec = sprite_infos[last_i as usize..*i as usize].to_vec();
 
       sprites.push(create_sprite(newvec, aabbs[sprite_id - 2].clone()));
-
-      /*
-        let mut j = 0;
-        let mut flags = 0;
-        // 1 = mirror/fliph
-        // 2 = mirror_rot180/flipv
-        // (3 = rot180 without mirroring)
-        // 4 = don't show (blink)
-
-        let mut x_add = 0;
-        let mut y_add = 0;
-
-        while j < newvec.len() {
-          let current = j;
-          j += 1;
-
-          match newvec[current] & 0xff {
-            0 => {
-              println!("  image id: {} {:?}", newvec[current] >> 8, image_names[(newvec[current] >> 8) as usize]);
-
-              if j + 2 <= newvec.len() {
-                println!("  crop: {} {}", newvec[j], newvec[j + 1]);
-              }
-
-              j += 2;
-            },
-            1 => {
-              flags ^= 1;
-            },
-            2 => {
-              flags ^= 2;
-            },
-            3 => {
-              let mut ournum = 0;
-
-              if (flags & 1) != 0 {
-                ournum = -sprite_infos[j];
-                j += 1;
-              } else {
-                ournum = sprite_infos[j];
-                j += 1;
-              }
-
-              x_add = ournum;
-
-              let mut ournum1 = 0;
-              if (flags & 2) != 0 {
-                ournum1 = -sprite_infos[j];
-                j += 1;
-              } else {
-                ournum1 = sprite_infos[j];
-                j += 1;
-              }
-
-              y_add = ournum1;
-            },
-            4 => {
-              if (flags & 4) != 0 {
-                j += 1;
-                continue;
-              }
-
-
-            },
-            _ => {
-            }
-          }
-       }*/
-
-      //println!("{:?} {} {:?}", newvec, newvec[0] & 0xff, image_names[(newvec[0] >> 8) as usize]);
     }
 
     last_i = *i as i64;
@@ -250,7 +180,7 @@ fn read_sprites<T: DataInputStream>(file: &mut T, context: &mut DataContext) -> 
     sprites.push(create_sprite(newvec, aabbs[sprite_id - 1].clone()));
   }
 
-  sprite_id = 0;
+  /*sprite_id = 0;
   for sprite in sprites.iter() {
     println!("{}", sprite_id);
 
@@ -259,11 +189,259 @@ fn read_sprites<T: DataInputStream>(file: &mut T, context: &mut DataContext) -> 
     }
 
     sprite_id += 1;
-  }
+  }*/
 
   context.sprites = sprites;
 
   Ok(())
+}
+
+fn read_clip<T: DataInputStream>(file: &mut T) -> io::Result<Clip> {
+  let mut clip = vec![];
+
+  let orientation_amt = file.read_short()?;
+  for _i in 0..orientation_amt {
+    let mut frames = vec![];
+
+    let frames_amt = file.read_short()?;
+    for _j in 0..frames_amt {
+      frames.push(file.read_short()?);
+    }
+
+    clip.push(frames);
+  }
+
+  Ok(clip)
+}
+
+fn read_clips<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Clip>> {
+  let clips_amt = file.read_short()?;
+
+  let mut clips = vec![];
+
+  for _i in 0..clips_amt {
+    clips.push(read_clip(file)?);
+  }
+
+  Ok(clips)
+}
+
+fn read_sounds<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Sound>> {
+  let sounds_amt = file.read_short()?;
+
+  let mut sounds = vec![];
+
+  for _i in 0..sounds_amt {
+    let filename = file.read_utf()?;
+    let mime = file.read_utf()?;
+    let priority = file.readInt()?;
+    let deferred_load = file.read_i8()? == 1;
+
+    sounds.push(Sound {
+      filename,
+      mime,
+      priority,
+      deferred_load
+    });
+  }
+
+  Ok(sounds)
+}
+
+fn read_items<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Item>> {
+  let items_amt = file.read_short()?;
+
+  let mut items = vec![];
+
+  for _i in 0..items_amt {
+    let itemtype = file.readInt()?;
+    let price = file.readInt()?;
+    let increment = file.readInt()?;
+    let maximum = file.readInt()?;
+    let name = file.readInt()?;
+    let description = file.readInt()?;
+    let sprite = file.read_short()?;
+
+    items.push(Item {
+      itemtype,
+      price,
+      increment,
+      maximum,
+      name,
+      description,
+      sprite
+    });
+  }
+
+  Ok(items)
+}
+
+fn read_quests<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Quest>> {
+  let quests_amt = file.read_short()?;
+
+  let mut quests = vec![];
+
+  for _i in 0..quests_amt {
+    let giver = file.readInt()?;
+    let is_mission_start = file.read_byte()? == 1;
+    let giver_sprite = file.read_short()?;
+    let name = file.readInt()?;
+    let description = file.readInt()?;
+    let levelid = file.readInt()?;
+
+    quests.push(Quest {
+      giver,
+      is_mission_start,
+      giver_sprite,
+      name,
+      description,
+      levelid
+    });
+  }
+
+  Ok(quests)
+}
+
+fn read_gangs<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Gang>> {
+  let gangs_amt = file.read_short()?;
+
+  let mut gangs = vec![];
+
+  for _i in 0..gangs_amt {
+    let name = file.readInt()?;
+    let sprite = file.read_short()?;
+    let notoriety_bar_sprite = file.read_short()?;
+    let default_notoriety = file.read_byte()?;
+    let unk1 = file.readInt()?;
+
+    gangs.push(Gang {
+      name,
+      sprite,
+      notoriety_bar_sprite,
+      default_notoriety,
+      unk1
+    });
+  }
+
+  Ok(gangs)
+}
+
+fn read_effects<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Effect>> {
+  let effects_amt = file.read_short()?;
+
+  let mut effects = vec![];
+
+  for _i in 0..effects_amt {
+    let effect_type_id = file.readInt()?;
+    let should_be_2 = file.readInt()?;
+    let unk1 = file.readInt()?;
+    let animation_time = file.read_unsigned_short()?;
+
+    let effect_type = match effect_type_id {
+      0 => EffectType::Clip(file.readInt()?),
+      1 => {
+        let mut spawners = vec![];
+
+        let spawners_amt = file.read_short()?;
+
+        for _j in 0..spawners_amt {
+          let effect_id = file.readInt()?;
+          let delay = file.read_unsigned_short()?;
+          let position = [
+            file.readInt()?,
+            file.readInt()?,
+            file.readInt()?
+          ];
+
+          spawners.push(EffectSpawner {
+            effect: effect_id,
+            delay,
+            position
+          });
+        }
+
+        EffectType::Spawner(spawners)
+      },
+      2 => {
+        let effect_id = file.readInt()?;
+
+        let modifiers_amt = file.read_short()?;
+        let mut infos = vec![];
+
+        let mut values = vec![];
+
+        for _j in 0..modifiers_amt {
+          let operation_id = file.readInt()?;
+          let operation = match operation_id {
+            0 => EffectModifierOperation::Linear,
+            1 => EffectModifierOperation::MoveXY,
+            2 => EffectModifierOperation::Curve,
+            3 => EffectModifierOperation::Bounce,
+            _ => {
+              panic!("Unknown effect modifier operation {}", operation_id);
+            }
+          };
+
+          let time_addition = file.readInt()?;
+
+          let variable0 = file.readInt()?;
+          let variable1 = file.readInt()?;
+
+          infos.push(EffectModifierInfo {
+            operation,
+            time_addition,
+            variable0,
+            variable1
+          });
+
+          let mut subvalues = vec![];
+          let subvalues_amt = file.read_short()?;
+
+          for _k in 0..subvalues_amt*2 {
+            subvalues.push((file.readInt()? as f32) / 65536.0);
+          }
+
+          values.push(subvalues);
+        }
+
+        EffectType::Modifier(EffectModifier {
+          effect: effect_id,
+          values,
+          infos
+        })
+      },
+      3 => {
+        let color = Color::from_bgr(file.readInt()? as u32);
+        let size = file.read_unsigned_byte()?;
+
+        EffectType::Square {
+          color,
+          size
+        }
+      },
+      4 => {
+        let color = Color::from_bgr(file.readInt()? as u32);
+        let size = file.readInt()?;
+
+        EffectType::Line {
+          color,
+          size
+        }
+      },
+      _ => {
+        panic!("Unknown effect type {}", effect_type_id);
+      }
+    };
+
+    effects.push(Effect {
+      should_be_2,
+      unk1,
+      animation_time,
+      effect_type
+    });
+  }
+
+  Ok(effects)
 }
 
 pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
@@ -272,7 +450,13 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
     fonts: vec![],
     languages: vec![],
     images: vec![],
-    sprites: vec![]
+    sprites: vec![],
+    clips: vec![],
+    sounds: vec![],
+    items: vec![],
+    quests: vec![],
+    gangs: vec![],
+    effects: vec![]
   };
 
   let mut contents = archive.open_file("bin.all")?;
@@ -281,6 +465,12 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   context.fonts = read_fonts(&mut contents).unwrap();
   context.languages = read_strings(&mut contents).unwrap();
   read_sprites(&mut contents, &mut context).unwrap();
+  context.clips = read_clips(&mut contents).unwrap();
+  context.sounds = read_sounds(&mut contents).unwrap();
+  context.items = read_items(&mut contents).unwrap();
+  context.quests = read_quests(&mut contents).unwrap();
+  context.gangs = read_gangs(&mut contents).unwrap();
+  context.effects = read_effects(&mut contents).unwrap();
 
   Ok(context)
 }

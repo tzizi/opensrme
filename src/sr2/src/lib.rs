@@ -42,8 +42,24 @@ pub fn main(archive: &Archive, args: Vec<String>) {
     });
   }
 
+  //println!("{:?}", datacontext);
+
+  for i in datacontext.effects.iter() {
+    println!("{:?}", i);
+  }
+
   let level = read_level(&mut archive.open_file("Street.lvl").unwrap()).unwrap();
-  println!("{:?}", level);
+  //println!("{:?}", level);
+
+  if false {
+    for y in 0..level.tiledata_size.y {
+      for x in 0..level.tiledata_size.x {
+        let tile = level.tiledata[(y * level.tiledata_size.x + x) as usize];
+        print!("{:3}", tile);
+      }
+      println!("");
+    }
+  }
 
   let mut context = Context {
     platform: Box::new(platform),
@@ -58,7 +74,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
   let mut running = true;
   let mut x = 0;
-  let mut current_sprite: SpriteId = 1359;
+  let mut current_sprite: SpriteId = 1038;
   let mut leftpressed = false;
   let mut offset = Vec2i::new(0, 0);
 

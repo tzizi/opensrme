@@ -48,6 +48,7 @@ pub fn read_level<T: DataInputStream>(file: &mut T) -> io::Result<Level> {
   let mut tiledata_x = 0;
   let mut tiledata_y = 0;
   let mut tiledata = vec![];
+  let mut tile_gangdata = vec![];
 
   if unk_1 > 0 {
     file.skip(4)?;
@@ -55,6 +56,12 @@ pub fn read_level<T: DataInputStream>(file: &mut T) -> io::Result<Level> {
     tiledata_x = file.read_short()?;
     tiledata_y = file.read_short()?;
     tiledata = file.read_amount((tiledata_x * tiledata_y) as usize)?;
+  }
+
+  if unk_1 > 1 {
+    file.skip(8)?;
+
+    tile_gangdata = file.read_amount((tiledata_x * tiledata_y) as usize)?;
   }
 
   Ok(Level {
@@ -65,7 +72,8 @@ pub fn read_level<T: DataInputStream>(file: &mut T) -> io::Result<Level> {
     unk2,
     unk3,
     tiledata_size: Vec2i::new(tiledata_x as IScalar, tiledata_y as IScalar),
-    tiledata
+    tiledata,
+    tile_gangdata
   })
 }
 

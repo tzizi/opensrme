@@ -23,9 +23,21 @@ def read_byte():
     pos += 1
     return short
 
+def read_unsigned_byte():
+    global pos
+    short = struct.unpack('>B', bytes(read[pos:pos+1]))[0]
+    pos += 1
+    return short
+
 def read_short():
     global pos
     short = struct.unpack('>h', bytes(read[pos:pos+2]))[0]
+    pos += 2
+    return short
+
+def read_unsigned_short():
+    global pos
+    short = struct.unpack('>H', bytes(read[pos:pos+2]))[0]
     pos += 2
     return short
 
@@ -191,7 +203,10 @@ def read_clips():
                 clips_ssub.append(read_short())
             clips_sub.append(clips_ssub)
         clips.append(clips_sub)
-    #print(clips)
+    #return
+    for i in range(len(clips)):
+        print(i)
+        print(clips[i])
 
 read_clips()
 
@@ -207,6 +222,7 @@ def read_sound():
         sound_mimes.append(read_utf())
         sound_priority.append(read_int())
         sound_load.append(read_boolean())
+    return
     print(sound_files)
     print(sound_mimes)
     print(sound_priority)
@@ -222,8 +238,8 @@ def read_items():
         item = []
         # 0 = type? 0 = weapon, 1 = food, 2 = addon? (gear, durability, colors)
         # 1 = price?
-        # 2 = ?
-        # 3 = ?
+        # 2 = increment
+        # 3 = max owned
         # 4 = item name id
         # 5 = item desc id
         # 6 = sprite id
@@ -231,7 +247,8 @@ def read_items():
             item.append(read_int())
         item.append(read_short())
         items.append(item)
-        #print('%s %s' % (str(languages[0][item[4]]), str(item)))
+        continue
+        print('%s %s' % (str(languages[0][item[4]]), str(item)))
 
 read_items()
 
@@ -246,11 +263,11 @@ def read_quests():
         #     2 = active
         #     4 = complete
         # 1 = person giving the quest (tid)
-        # 2 = ?
+        # 2 = is mission start?
         # 3 = person sprite id
         # 4 = quest name (tid)
         # 5 = quest description (tid)
-        # 6 = ?
+        # 6 = level id
         quest.append(0)
         quest.append(read_int())
         if read_boolean():
@@ -289,8 +306,81 @@ def read_gangs():
         gang.append(read_byte())
         gang.append(read_int())
         gangs.append(gang)
+        continue
         pprint.pprint([
             languages[0][gang[0]],
             gang
         ])
 read_gangs()
+
+print(pos)
+
+def read_effects():
+    effects_len = read_short()
+
+    for effect_i in range(effects_len):
+        # effect_i 9 = gore
+        effect = {}
+
+        effect["effect_type"] = read_int()
+        effect_type = effect["effect_type"]
+        effect["should_be_2"] = read_int()
+        effect["unk1"] = read_int()
+        effect["animation_time"] = read_unsigned_short()
+
+        print(pos)
+
+        if effect_type == 0: # clip
+            effect["clip"] = read_int()
+        if effect_type == 1: # spawner
+            spawners_len = read_short()
+            spawners = []
+            for i in range(spawners_len):
+                newarray = []
+                for j in range(5):
+                    newarray.append(0)
+                # effect id
+                newarray[3] = read_int()
+                # increment amount (n / this = number of effects added)
+                newarray[4] = read_unsigned_short()
+                # 0-2: pos-orientation
+                newarray[0] = read_int()
+                newarray[1] = read_int()
+                newarray[2] = read_int()
+                spawners.append(newarray)
+            effect["spawners"] = spawners
+        if effect_type == 2:
+            effect["linked_effect"] = read_int()
+            array_len = read_short()
+
+            array1 = []
+            array2 = []
+
+            for i in range(array_len):
+
+                array2.append([
+                    # 0: operation (0-3)
+                    read_int(),
+                    # 1: always 0?, adds to the current time elapsed for the operation
+                    read_int(),
+                    # 2: variable 0
+                    read_int(),
+                    # 3: variable 1
+                    read_int()
+                ])
+                newarray = []
+                newarray_len = read_short()
+                for j in range(newarray_len * 2):
+                    newarray.append(read_int())
+                array1.append(newarray)
+            effect["array1"] = array1
+            effect["array2"] = array2
+        if effect_type == 3:
+            effect["color"] = '%x'%(read_int())
+            effect["rect_size"] = read_unsigned_byte()
+        if effect_type == 4:
+            effect["color"] = '%x'%(read_int())
+            effect["size"] = read_int()
+        print(str(effect_i) + " " + str(effect_type))
+        pprint.pprint(effect)
+read_effects()

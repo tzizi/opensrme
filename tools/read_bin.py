@@ -121,6 +121,7 @@ read_fonts()
 print_pos()
 
 languages = []
+items = []
 
 def read_strings():
     global languages
@@ -232,6 +233,7 @@ read_sound()
 
 
 def read_items():
+    global items
     items_len = read_short()
     items = []
     for i in range(items_len):
@@ -328,7 +330,7 @@ def read_effects():
         effect["unk1"] = read_int()
         effect["animation_time"] = read_unsigned_short()
 
-        print(pos)
+        #print(pos)
 
         if effect_type == 0: # clip
             effect["clip"] = read_int()
@@ -381,6 +383,86 @@ def read_effects():
         if effect_type == 4:
             effect["color"] = '%x'%(read_int())
             effect["size"] = read_int()
-        print(str(effect_i) + " " + str(effect_type))
-        pprint.pprint(effect)
+        #print(str(effect_i) + " " + str(effect_type))
+        #pprint.pprint(effect)
 read_effects()
+
+def read_classes():
+    classes_len = read_short()
+    print(str(classes_len) + " classes")
+    classes = []
+    for i in range(classes_len):
+        classes.append([
+            # 0: object type
+            read_int(),
+            # 1: clip id
+            read_int(),
+            # 2: default health
+            read_short(),
+            # 3:
+            read_int(),
+            # 4: x or y (float), width?
+            read_int() / 65536.0,
+            # 5: y or x (float), height?
+            read_int() / 65536.0,
+            # 6:
+            read_int(),
+            # 7:
+            read_int()
+        ])
+        #continue
+        print(i)
+        pprint.pprint(classes[i])
+
+read_classes()
+
+def read_weapons():
+    weapons_len = read_short()
+    print(str(weapons_len) + " weapons")
+    weapons = []
+    for i in range(weapons_len):
+        weapons.append([
+            # 0: item id
+            read_int(),
+            # 1: weapon class?
+            #  0 = melee
+            #  1 = pistol
+            #  2 = smg
+            #  3 = assault rifle
+            #  4 = special/heavy (sniper, rpg)
+            read_int(),
+            # 2:
+            read_short(),
+            # 3: animation time?
+            read_short(),
+            # 4: area of effect (float)
+            read_int(),
+            # 5: increment (n * this)
+            read_byte(),
+            # 6: sound id
+            read_int()
+        ])
+        print(i)
+        pprint.pprint(weapons[i])
+        print(str(languages[0][items[weapons[i][0]][4]]))
+        print(str(languages[0][items[weapons[i][0]][5]]))
+
+read_weapons()
+
+def read_unk1():
+    unk1_len = read_short()
+    unk1 = []
+
+    for i in range(unk1_len):
+        unk1.append([
+            read_int(),
+            read_int(),
+            read_int(),
+            read_int(),
+            read_int(),
+            read_int(),
+            read_int()
+        ])
+        print(i)
+        pprint.pprint(unk1[i])
+read_unk1()

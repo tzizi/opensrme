@@ -3,17 +3,19 @@ extern crate encoding;
 
 mod types;
 use types::*;
+mod globals;
+use globals::*;
 mod sprite;
 mod bin_all;
 use bin_all::*;
 mod level;
 use level::*;
+mod entity;
 
 #[macro_use]
 use opensrme_common::*;
 
 use std::io;
-use std::io::Read;
 
 pub fn check(archive: &Archive) -> io::Result<bool> {
   let manifest = archive.get_manifest()?;
@@ -44,11 +46,12 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
   //println!("{:?}", datacontext);
 
-  for i in datacontext.effects.iter() {
+  /*for i in datacontext.effects.iter() {
     println!("{:?}", i);
-  }
+  }*/
 
-  let level = read_level(&mut archive.open_file("Street.lvl").unwrap()).unwrap();
+  let level = read_level(&mut archive.open_file("Ultor.lvl").unwrap()).unwrap();
+  println!("{} {}", level.tilesizex, level.tilesizey);
   //println!("{:?}", level);
 
   if false {
@@ -70,13 +73,17 @@ pub fn main(archive: &Archive, args: Vec<String>) {
     levels: vec![]
   };
 
-  let image = context.platform.load_image_from_filename(archive, "Car_Police.png");
+  set_context(context);
+  let mut context = get_context();
+
+  //let image = context.platform.load_image_from_filename(archive, "Car_Police.png");
 
   let mut running = true;
   let mut x = 0;
-  let mut current_sprite: SpriteId = 1038;
+  let mut current_sprite: usize = 0;
+  let mut current_orientation: usize = 0;
   let mut leftpressed = false;
-  let mut offset = Vec2i::new(0, 0);
+  let mut offset = Vec3i::new2(0, 0);
 
   let mut last_second = context.time;
   let mut fps = 0;
@@ -100,11 +107,31 @@ pub fn main(archive: &Archive, args: Vec<String>) {
             }
 
             if key.value == 'a' as u8 {
-              current_sprite -= 1;
-              println!("{} {:?}", current_sprite, context.data.sprites[current_sprite as usize]);
+              if current_sprite == 0 {
+                current_sprite = context.data.clips.len() - 1;
+              } else {
+                current_sprite -= 1;
+              }
+              current_orientation = 0;
+              println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
             } else if key.value == 'd' as u8 {
               current_sprite += 1;
-              println!("{} {:?}", current_sprite, context.data.sprites[current_sprite as usize]);
+              if current_sprite as usize >= context.data.clips.len() {
+                current_sprite = 0;
+              }
+              current_orientation = 0;
+              println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
+            } else if key.value == 'w' as u8 {
+              if current_orientation == 0 {
+                current_orientation = context.data.clips[current_sprite].len() - 1;
+              } else {
+                current_orientation -= 1;
+              }
+            } else if key.value == 's' as u8 {
+              current_orientation += 1;
+              if current_orientation >= context.data.clips[current_sprite].len() {
+                current_orientation = 0;
+              }
             }
           }
         },
@@ -132,11 +159,27 @@ pub fn main(archive: &Archive, args: Vec<String>) {
     context.platform.translate(offset);
     //context.platform.draw_region(&image, 0, 0, x, x, 0, None, 50, 10);
 
-    draw_level_layer(&mut context, &level.layer1);
-    draw_shadows(&mut context, &level);
-    draw_level_layer(&mut context, &level.layer2);
+    draw_level_layer(&level.layer1);
+    draw_shadows(&level);
 
-    sprite::draw_sprite(&mut context, current_sprite, Vec2i::new(50, 50), 0);
+    for unk1_id in 0..level.unk1 {
+      let unk1_i = unk1_id as usize * 3;
+
+      if level.unk1_data[unk1_i] == -1 {
+        continue;
+      }
+
+      sprite::draw_sprite(level.unk1_data[unk1_i], Vec3i::new2(level.unk1_data[unk1_i + 1] as i32,
+                                                               level.unk1_data[unk1_i + 2] as i32), 0);
+    }
+
+    draw_level_layer(&level.layer2);
+
+
+
+    let sprite = context.data.clips[current_sprite as usize][current_orientation][0];
+    sprite::draw_sprite(sprite, Vec3i::new2(50, 50), 0);
+    sprite::draw_sprite(1368, Vec3i::new2(200, 200), 0);
 
     context.platform.swap();
 

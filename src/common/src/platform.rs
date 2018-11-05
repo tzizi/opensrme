@@ -58,8 +58,8 @@ pub enum Event {
   },
   MouseScroll(MouseScroll),
   MousePos {
-    pos: Vec2i,
-    delta: Vec2i
+    pos: Vec3i,
+    delta: Vec3i
   }
 }
 
@@ -69,7 +69,7 @@ pub type Flip = u8;
 
 pub struct Rotate {
   pub angle: FScalar, // 0 = no rotation, 1 = 360
-  pub origin: Vec2i
+  pub origin: Vec3i
 }
 
 pub trait Platform {
@@ -84,7 +84,7 @@ pub trait Platform {
       let image = image.to_rgba();
 
       self.new_image(Image {
-        size: Vec2i::new(image.width() as i32, image.height() as i32),
+        size: Vec3i::new2(image.width() as i32, image.height() as i32),
         data: image.into_raw()
       })
     } else {
@@ -107,8 +107,8 @@ pub trait Platform {
   fn unload_image(&mut self, image: PlatformId);
 
   fn reset(&mut self);
-  fn translate(&mut self, pos: Vec2i);
-  //fn scale(&mut self, scale: Vec2i);
+  fn translate(&mut self, pos: Vec3i);
+  //fn scale(&mut self, scale: Vec3i);
 
   fn set_color(&mut self, color: Color);
   fn clear(&mut self);

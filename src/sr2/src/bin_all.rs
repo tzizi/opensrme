@@ -444,6 +444,36 @@ fn read_effects<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Effect>> {
   Ok(effects)
 }
 
+fn read_classes<T: DataInputStream>(file: &mut T) -> io::Result<Vec<EntityClass>> {
+  let classes_amt = file.read_short()?;
+
+  let mut classes = vec![];
+
+  for _i in 0..classes_amt {
+    let entity_type = file.readInt()?;
+    let clip = file.readInt()?;
+    let health = file.read_short()?;
+    let unk1 = file.readInt()?;
+    let width = (file.readInt()? as FScalar) / 65536.0;
+    let height = (file.readInt()? as FScalar) / 65536.0;
+    let unk2 = file.readInt()?;
+    let unk3 = file.readInt()?;
+
+    classes.push(EntityClass {
+      entity_type,
+      clip,
+      health,
+      unk1,
+      width,
+      height,
+      unk2,
+      unk3
+    });
+  }
+
+  Ok(classes)
+}
+
 pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   let mut context = DataContext {
     palettes: vec![],
@@ -456,7 +486,8 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
     items: vec![],
     quests: vec![],
     gangs: vec![],
-    effects: vec![]
+    effects: vec![],
+    classes: vec![]
   };
 
   let mut contents = archive.open_file("bin.all")?;
@@ -471,6 +502,7 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   context.quests = read_quests(&mut contents).unwrap();
   context.gangs = read_gangs(&mut contents).unwrap();
   context.effects = read_effects(&mut contents).unwrap();
+  context.classes = read_classes(&mut contents).unwrap();
 
   Ok(context)
 }

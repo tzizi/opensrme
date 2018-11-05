@@ -16,7 +16,7 @@ pub struct SDL2Platform {
 
   textures: HashMap<PlatformId, sdl2::render::Texture>,
 
-  offset: Vec2i
+  offset: Vec3i
 }
 
 
@@ -90,8 +90,8 @@ fn get_event(event: SEvent) -> Option<Event> {
     SEvent::MouseButtonUp { mouse_btn, .. }   => mouseb_event(false, mouse_btn),
     SEvent::MouseMotion { x, y, xrel, yrel, .. } => {
       Event::MousePos {
-        pos: Vec2i::new(x, y),
-        delta: Vec2i::new(xrel, yrel)
+        pos: Vec3i::new2(x, y),
+        delta: Vec3i::new2(xrel, yrel)
       }
     },
     _                                         => return None
@@ -123,7 +123,7 @@ impl Platform for SDL2Platform {
       sdl_canvas: canvas,
       texture_creator: texture_creator,
       textures: HashMap::new(),
-      offset: Vec2i::new(0, 0)
+      offset: Vec3i::new2(0, 0)
     }
   }
 
@@ -167,7 +167,7 @@ impl Platform for SDL2Platform {
     self.offset.y = 0;
   }
 
-  fn translate(&mut self, pos: Vec2i) {
+  fn translate(&mut self, pos: Vec3i) {
     self.offset = self.offset + pos;
   }
 

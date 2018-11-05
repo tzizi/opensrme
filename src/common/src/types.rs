@@ -40,114 +40,142 @@ impl Color {
 #[derive(Debug)]
 pub struct Image {
   pub data: Vec<u8>,
-  pub size: Vec2i
+  pub size: Vec3i
 }
+
+pub type Angle = f32;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-pub struct Vec2<T> {
+pub struct Vec3<T> {
   pub x: T,
-  pub y: T
+  pub y: T,
+  pub z: T
 }
 
-impl<T> Vec2<T> {
-  pub fn new(x: T, y: T) -> Self {
-    Vec2::<T> {
+impl<T: Default+Into<f64>+Copy> Vec3<T> {
+  pub fn new2(x: T, y: T) -> Self {
+    Vec3::<T> {
       x,
-      y
+      y,
+      z: T::default()
     }
+  }
+
+  pub fn new3(x: T, y: T, z: T) -> Self {
+    Vec3::<T> {
+      x,
+      y,
+      z
+    }
+  }
+
+  pub fn len2(&self) -> f64 {
+    (self.x.into() * self.x.into() + self.y.into() * self.y.into()).sqrt()
+  }
+
+  pub fn len3(&self) -> f64 {
+    (self.x.into() * self.x.into() + self.y.into() * self.y.into() + self.z.into() * self.z.into()).sqrt()
   }
 }
 
 pub type IScalar = i32;
 pub type FScalar = f64;
 
-pub type Vec2i = Vec2<IScalar>;
-pub type Vec2f = Vec2<FScalar>;
+pub type Vec3i = Vec3<IScalar>;
+pub type Vec3f = Vec3<FScalar>;
 
-impl<T: Add<Output=T>> Add<Vec2<T>> for Vec2<T> {
-  type Output = Vec2<T>;
+impl<T: Add<Output=T>> Add<Vec3<T>> for Vec3<T> {
+  type Output = Vec3<T>;
 
-  fn add(self, other: Vec2<T>) -> Vec2<T> {
-    Vec2::<T> {
+  fn add(self, other: Vec3<T>) -> Vec3<T> {
+    Vec3::<T> {
       x: self.x + other.x,
-      y: self.y + other.y
+      y: self.y + other.y,
+      z: self.z + other.z
     }
   }
 }
 
-impl<T: Add<Output=T>+Copy> Add<T> for Vec2<T> {
-  type Output = Vec2<T>;
+impl<T: Add<Output=T>+Copy> Add<T> for Vec3<T> {
+  type Output = Vec3<T>;
 
-  fn add(self, other: T) -> Vec2<T> {
-    Vec2::<T> {
+  fn add(self, other: T) -> Vec3<T> {
+    Vec3::<T> {
       x: self.x + other,
-      y: self.y + other
+      y: self.y + other,
+      z: self.z + other
     }
   }
 }
 
-impl<T: Sub<Output=T>> Sub for Vec2<T> {
-  type Output = Vec2<T>;
+impl<T: Sub<Output=T>> Sub for Vec3<T> {
+  type Output = Vec3<T>;
 
-  fn sub(self, other: Vec2<T>) -> Vec2<T> {
-    Vec2::<T> {
+  fn sub(self, other: Vec3<T>) -> Vec3<T> {
+    Vec3::<T> {
       x: self.x - other.x,
-      y: self.y - other.y
+      y: self.y - other.y,
+      z: self.z - other.z
     }
   }
 }
 
-impl<T: Sub<Output=T>+Copy> Sub<T> for Vec2<T> {
-  type Output = Vec2<T>;
+impl<T: Sub<Output=T>+Copy> Sub<T> for Vec3<T> {
+  type Output = Vec3<T>;
 
-  fn sub(self, other: T) -> Vec2<T> {
-    Vec2::<T> {
+  fn sub(self, other: T) -> Vec3<T> {
+    Vec3::<T> {
       x: self.x - other,
-      y: self.y - other
+      y: self.y - other,
+      z: self.z - other
     }
   }
 }
 
-impl<T: Mul<Output=T>> Mul<Vec2<T>> for Vec2<T> {
-  type Output = Vec2<T>;
+impl<T: Mul<Output=T>> Mul<Vec3<T>> for Vec3<T> {
+  type Output = Vec3<T>;
 
-  fn mul(self, other: Vec2<T>) -> Vec2<T> {
-    Vec2::<T> {
+  fn mul(self, other: Vec3<T>) -> Vec3<T> {
+    Vec3::<T> {
       x: self.x * other.x,
-      y: self.y * other.y
+      y: self.y * other.y,
+      z: self.z * other.z
     }
   }
 }
 
-impl<T: Mul<Output=T>+Copy> Mul<T> for Vec2<T> {
-  type Output = Vec2<T>;
+impl<T: Mul<Output=T>+Copy> Mul<T> for Vec3<T> {
+  type Output = Vec3<T>;
 
-  fn mul(self, other: T) -> Vec2<T> {
-    Vec2::<T> {
+  fn mul(self, other: T) -> Vec3<T> {
+    Vec3::<T> {
       x: self.x * other,
-      y: self.y * other
+      y: self.y * other,
+      z: self.z * other
     }
   }
 }
 
-impl<T: Div<Output=T>> Div<Vec2<T>> for Vec2<T> {
-  type Output = Vec2<T>;
+impl<T: Div<Output=T>> Div<Vec3<T>> for Vec3<T> {
+  type Output = Vec3<T>;
 
-  fn div(self, other: Vec2<T>) -> Vec2<T> {
-    Vec2::<T> {
+  fn div(self, other: Vec3<T>) -> Vec3<T> {
+    Vec3::<T> {
       x: self.x / other.x,
-      y: self.y / other.y
+      y: self.y / other.y,
+      z: self.z / other.z
     }
   }
 }
 
-impl<T: Div<Output=T>+Copy> Div<T> for Vec2<T> {
-  type Output = Vec2<T>;
+impl<T: Div<Output=T>+Copy> Div<T> for Vec3<T> {
+  type Output = Vec3<T>;
 
-  fn div(self, other: T) -> Vec2<T> {
-    Vec2::<T> {
+  fn div(self, other: T) -> Vec3<T> {
+    Vec3::<T> {
       x: self.x / other,
-      y: self.y / other
+      y: self.y / other,
+      z: self.z / other
     }
   }
 }

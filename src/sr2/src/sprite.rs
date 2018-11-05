@@ -1,4 +1,5 @@
 use opensrme_common::*;
+use super::globals::*;
 use super::types::*;
 
 fn read_drawcommand(info: &Vec<i16>, pos: usize) -> (usize, DrawCommand) {
@@ -84,7 +85,7 @@ pub fn create_sprite(info: Vec<i16>, aabb: Vec<i16>) -> Sprite {
   };
 }
 
-pub fn calc_aabb(sprite: &Sprite, pos: Vec2i, flip: Flip) -> [i16; 4] {
+pub fn calc_aabb(sprite: &Sprite, pos: Vec3i, flip: Flip) -> [i16; 4] {
   let mut x = sprite.aabb[0];
   let mut y = sprite.aabb[1];
   let mut width = sprite.aabb[2];
@@ -104,8 +105,10 @@ pub fn calc_aabb(sprite: &Sprite, pos: Vec2i, flip: Flip) -> [i16; 4] {
   [x, y, x + width, y + height]
 }
 
-fn sub_draw_sprite(data: &DataContext, time: Time, platform: &mut Box<Platform>, images: &Vec<PaletteImage>, spriteid: SpriteId, pos: Vec2i, flip: Flip) {
-  let sprite = &data.sprites[spriteid as usize];
+pub fn draw_sprite(spriteid: SpriteId, pos: Vec3i, flip: Flip) {
+  let mut context = get_context();
+
+  let sprite = &context.data.sprites[spriteid as usize];
   let aabb = calc_aabb(&sprite, pos, flip);
 
   let mut flip = flip;
@@ -123,8 +126,8 @@ fn sub_draw_sprite(data: &DataContext, time: Time, platform: &mut Box<Platform>,
         start_y
       } => {
         //println!("{:?}", context.images[image_id as usize]);
-        platform.draw_region(
-          &images[image_id as usize].image,
+        context.platform.draw_region(
+          &context.images[image_id as usize].image,
           start_x as IScalar,
           start_y as IScalar,
           (aabb[2] - aabb[0]) as IScalar,
@@ -160,7 +163,7 @@ fn sub_draw_sprite(data: &DataContext, time: Time, platform: &mut Box<Platform>,
           if new_spriteid as SpriteId == spriteid as SpriteId {
             println!("Same sprite id: {}", spriteid);
           } else {
-            sub_draw_sprite(data, time, platform, images, new_spriteid as SpriteId, Vec2i::new(pos.x + startx as i32, pos.y + starty as i32), flip);
+            draw_sprite(new_spriteid as SpriteId, Vec3i::new2(pos.x + startx as i32, pos.y + starty as i32), flip);
           }
         }
       },
@@ -169,14 +172,14 @@ fn sub_draw_sprite(data: &DataContext, time: Time, platform: &mut Box<Platform>,
         total_time,
         frames
       } => {
-        if (frame as u64) == (time / (total_time as u64)) % (frames as u64) {
+        if (frame as u64) == (context.time / (total_time as u64)) % (frames as u64) {
           hidden = false;
         } else {
           hidden = true;
         }
       },
       DrawCommand::SetColor(color) => {
-        platform.set_color(color)
+        context.platform.set_color(color)
       },
       DrawCommand::DrawShape {
         shape, x, y
@@ -193,7 +196,7 @@ fn sub_draw_sprite(data: &DataContext, time: Time, platform: &mut Box<Platform>,
         }
         match shape {
           DrawShape::FillRect => {
-            platform.fill_rect(draw_x, draw_y, x.into(), y.into());
+            context.platform.fill_rect(draw_x, draw_y, x.into(), y.into());
           },
           _ => {
           }
@@ -203,8 +206,4 @@ fn sub_draw_sprite(data: &DataContext, time: Time, platform: &mut Box<Platform>,
       }
     }
   }
-}
-
-pub fn draw_sprite(context: &mut Context, spriteid: SpriteId, pos: Vec2i, flip: Flip) {
-  sub_draw_sprite(&context.data, context.time, &mut context.platform, &context.images, spriteid, pos, flip)
 }

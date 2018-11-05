@@ -5,6 +5,7 @@ pub type SpriteId = i16;
 pub type TextId = Id;
 pub type ClipId = Id;
 pub type EffectId = Id;
+pub type ClassId = Id;
 
 #[derive(Debug)]
 pub struct Palette {
@@ -219,6 +220,18 @@ pub struct Effect {
 }
 
 #[derive(Debug)]
+pub struct EntityClass {
+  pub entity_type: i32,
+  pub clip: ClipId,
+  pub health: i16,
+  pub unk1: i32,
+  pub width: FScalar,
+  pub height: FScalar,
+  pub unk2: i32,
+  pub unk3: i32
+}
+
+#[derive(Debug)]
 pub struct DataContext {
   pub palettes: Vec<Palette>,
   pub fonts: Vec<Font>,
@@ -230,15 +243,30 @@ pub struct DataContext {
   pub items: Vec<Item>,
   pub quests: Vec<Quest>,
   pub gangs: Vec<Gang>,
-  pub effects: Vec<Effect>
+  pub effects: Vec<Effect>,
+  pub classes: Vec<EntityClass>
 }
 
 #[derive(Debug)]
 pub struct LevelLayer {
-  pub start: Vec2i,
-  pub tilesize: Vec2i,
-  pub size: Vec2i,
+  pub start: Vec3i,
+  pub tilesize: Vec3i,
+  pub size: Vec3i,
   pub tiles: Vec<i16>
+}
+
+#[derive(Debug)]
+pub struct RoutePart {
+  // 0, 1
+  pub pos: Vec3f,
+  // 3
+  pub distance: f64,
+  pub unk1: u8
+}
+
+#[derive(Debug)]
+pub struct Route {
+  pub pargs: Vec<RoutePart>
 }
 
 #[derive(Debug)]
@@ -247,9 +275,9 @@ pub struct Level {
   pub layer2: LevelLayer,
   pub unk1: u16,
   pub unk1_data: Vec<i16>,
-  pub unk2: i32,
-  pub unk3: i32,
-  pub tiledata_size: Vec2i,
+  pub tilesizex: FScalar,
+  pub tilesizey: FScalar,
+  pub tiledata_size: Vec3i,
   pub tiledata: Vec<i8>,
   pub tile_gangdata: Vec<i8>
 }

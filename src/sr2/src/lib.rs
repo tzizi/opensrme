@@ -11,6 +11,7 @@ use bin_all::*;
 mod level;
 use level::*;
 mod entity;
+mod route;
 
 #[macro_use]
 use opensrme_common::*;
@@ -52,7 +53,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
   let level = read_level(&mut archive.open_file("Ultor.lvl").unwrap()).unwrap();
   println!("{} {}", level.tilesizex, level.tilesizey);
-  //println!("{:?}", level);
+  println!("{:?}", level);
 
   if false {
     for y in 0..level.tiledata_size.y {
@@ -80,7 +81,8 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
   let mut running = true;
   let mut x = 0;
-  let mut current_sprite: usize = 0;
+  let draw_clip = false;
+  let mut current_sprite: usize = 1368;
   let mut current_orientation: usize = 0;
   let mut leftpressed = false;
   let mut offset = Vec3i::new2(0, 0);
@@ -107,20 +109,28 @@ pub fn main(archive: &Archive, args: Vec<String>) {
             }
 
             if key.value == 'a' as u8 {
-              if current_sprite == 0 {
+              if current_sprite == 0 && draw_clip {
                 current_sprite = context.data.clips.len() - 1;
               } else {
                 current_sprite -= 1;
               }
               current_orientation = 0;
-              println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
+              if draw_clip {
+                println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
+              } else {
+                println!("{}", current_sprite);
+              }
             } else if key.value == 'd' as u8 {
               current_sprite += 1;
-              if current_sprite as usize >= context.data.clips.len() {
+              if current_sprite as usize >= context.data.clips.len() && draw_clip {
                 current_sprite = 0;
               }
               current_orientation = 0;
-              println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
+              if draw_clip {
+                println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
+              } else {
+                println!("{}", current_sprite);
+              }
             } else if key.value == 'w' as u8 {
               if current_orientation == 0 {
                 current_orientation = context.data.clips[current_sprite].len() - 1;
@@ -161,24 +171,17 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
     draw_level_layer(&level.layer1);
     draw_shadows(&level);
-
-    for unk1_id in 0..level.unk1 {
-      let unk1_i = unk1_id as usize * 3;
-
-      if level.unk1_data[unk1_i] == -1 {
-        continue;
-      }
-
-      sprite::draw_sprite(level.unk1_data[unk1_i], Vec3i::new2(level.unk1_data[unk1_i + 1] as i32,
-                                                               level.unk1_data[unk1_i + 2] as i32), 0);
-    }
-
+    draw_objects(&level);
     draw_level_layer(&level.layer2);
 
 
 
-    let sprite = context.data.clips[current_sprite as usize][current_orientation][0];
-    sprite::draw_sprite(sprite, Vec3i::new2(50, 50), 0);
+    if draw_clip {
+      let sprite = context.data.clips[current_sprite as usize][current_orientation][0];
+      sprite::draw_sprite(sprite, Vec3i::new2(50, 50), 0);
+    } else {
+      sprite::draw_sprite(current_sprite as SpriteId, Vec3i::new2(50, 50), 0);
+    }
     sprite::draw_sprite(1368, Vec3i::new2(200, 200), 0);
 
     context.platform.swap();

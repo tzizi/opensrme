@@ -6,6 +6,7 @@ pub type TextId = Id;
 pub type ClipId = Id;
 pub type EffectId = Id;
 pub type ClassId = Id;
+pub type RouteId = Id;
 
 #[derive(Debug)]
 pub struct Palette {
@@ -256,8 +257,14 @@ pub struct LevelLayer {
 }
 
 #[derive(Debug)]
+pub struct LevelObject {
+  pub pos: Vec3i,
+  pub sprite: SpriteId
+}
+
+#[derive(Debug)]
 pub struct RoutePart {
-  // 0, 1
+  // 0, 1, 2
   pub pos: Vec3f,
   // 3
   pub distance: f64,
@@ -266,20 +273,30 @@ pub struct RoutePart {
 
 #[derive(Debug)]
 pub struct Route {
-  pub pargs: Vec<RoutePart>
+  pub parts: Vec<RoutePart>
+}
+
+#[derive(Debug)]
+pub struct LevelEntity {
+  pub class: ClassId,
+  pub pos: Vec3i,
+  pub unk1: i16,
+  pub route: RouteId
 }
 
 #[derive(Debug)]
 pub struct Level {
   pub layer1: LevelLayer,
   pub layer2: LevelLayer,
-  pub unk1: u16,
-  pub unk1_data: Vec<i16>,
+  pub objects: Vec<LevelObject>,
   pub tilesizex: FScalar,
   pub tilesizey: FScalar,
   pub tiledata_size: Vec3i,
   pub tiledata: Vec<i8>,
-  pub tile_gangdata: Vec<i8>
+  pub tile_gangdata: Vec<i8>,
+
+  pub entities: Vec<LevelEntity>,
+  pub routes: Vec<Route>
 }
 
 pub struct Context {

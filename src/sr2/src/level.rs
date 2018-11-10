@@ -3,7 +3,7 @@ use types::*;
 use super::*;
 use std::io;
 
-pub fn read_levellayer<T: DataInputStream>(file: &mut T) -> io::Result<LevelLayer> {
+fn read_levellayer<T: DataInputStream>(file: &mut T) -> io::Result<LevelLayer> {
   let startx:IScalar = file.read_short()? as IScalar;
   let starty:IScalar = file.read_short()? as IScalar;
 
@@ -21,16 +21,75 @@ pub fn read_levellayer<T: DataInputStream>(file: &mut T) -> io::Result<LevelLaye
   })
 }
 
+fn read_levelobject<T: DataInputStream>(file: &mut T) -> io::Result<LevelObject> {
+  let spriteid = file.read_short()?;
+  let posx = file.read_short()?;
+  let posy = file.read_short()?;
+
+  Ok(LevelObject {
+    pos: Vec3i::new2(posx as IScalar, posy as IScalar),
+    sprite: spriteid as SpriteId
+  })
+}
+
+fn read_levelentity<T: DataInputStream>(file: &mut T) -> io::Result<LevelEntity> {
+  let entity_class_id = file.read_unsigned_byte()?;
+  // if 0, and if player is female, set to 1
+
+  let posx = file.read_short()?;
+  let posy = file.read_short()?;
+  let unk1 = file.read_short()?;
+  let route_id = file.read_byte()?;
+
+  println!("Class: {}\n  X: {}, Y: {}\n  Unk1: {}, Route: {}\n",
+             entity_class_id, posx, posy, unk1, route_id);
+
+  Ok(LevelEntity {
+    class: entity_class_id as ClassId,
+    pos: Vec3i::new2(posx as IScalar, posy as IScalar),
+    unk1,
+    route: route_id as RouteId
+  })
+}
+
+fn read_routepart<T: DataInputStream>(file: &mut T) -> io::Result<RoutePart> {
+  let x = file.read_short()? as FScalar;
+  let y = file.read_short()? as FScalar;
+
+  let pos = Vec3f::new2(x, y);
+
+  let unk1 = file.read_unsigned_byte()?;
+
+  Ok(RoutePart {
+    pos,
+    distance: 0.,
+    unk1
+  })
+}
+
+fn read_route<T: DataInputStream>(file: &mut T) -> io::Result<Route> {
+  let route_parts_amt = file.read_byte()?;
+  let mut parts: Vec<RoutePart> = vec![];
+
+  for _i in 0..route_parts_amt {
+    parts.push(read_routepart(file)?);
+  }
+
+  Ok(Route {
+    parts
+  })
+}
+
 pub fn read_level<T: DataInputStream>(file: &mut T) -> io::Result<Level> {
   file.skip(2)?;
 
   let mut levellayer1 = read_levellayer(file)?;
-  let unk1 = file.read_unsigned_short()?;
+  let objects_amt = file.read_unsigned_short()?;
   let mut levellayer2 = read_levellayer(file)?;
-  let mut unk1_data = vec![];
+  let mut objects = vec![];
 
-  for _i in 0..unk1*3 {
-    unk1_data.push(file.read_short()?);
+  for _i in 0..objects_amt {
+    objects.push(read_levelobject(file)?);
   }
 
   for _i in 0..(levellayer1.size.x * levellayer1.size.y) {
@@ -66,61 +125,31 @@ pub fn read_level<T: DataInputStream>(file: &mut T) -> io::Result<Level> {
 
 
   let entities_amt = file.read_unsigned_byte()?;
+  let mut entities = vec![];
   println!("{} entities", entities_amt);
   for _i in 0..entities_amt {
-    let entity_class_id = file.read_unsigned_byte()?;
-    // if 0, and if player is female, set to 1
-
-    let posx = file.read_short()?;
-    let posy = file.read_short()?;
-    let unk1 = file.read_short()?;
-    let route_id = file.read_byte()?;
-
-    println!("Class: {}\n  X: {}, Y: {}\n  Unk1: {}, Route: {}\n",
-             entity_class_id, posx, posy, unk1, route_id);
+    entities.push(read_levelentity(file)?);
   }
 
   let routes_amt = file.read_short()?;
-  for i in 0..routes_amt {
-    let route_parts_amt = file.read_byte()?;
-    println!("{}", i);
-
-    let mut parts: Vec<RoutePart> = vec![];
-    let mut current_distance = 0.;
-
-    for j in 0..route_parts_amt {
-      let x = file.read_short()? as FScalar;
-      let y = file.read_short()? as FScalar;
-
-      let pos = Vec3f::new2(x, y);
-
-      let unk1 = file.read_unsigned_byte()?;
-
-      if j > 0 {
-        current_distance += (pos - parts[(j as usize) - 1].pos).len2();
-      }
-
-      let routepart = RoutePart {
-        pos,
-        distance: current_distance,
-        unk1
-      };
-
-      println!("{:?}", routepart);
-      parts.push(routepart);
-    }
+  let mut routes = vec![];
+  for _i in 0..routes_amt {
+    let mut route = read_route(file)?;
+    route::calc_route_distance(&mut route);
+    routes.push(route);
   }
 
   Ok(Level {
     layer1: levellayer1,
     layer2: levellayer2,
-    unk1,
-    unk1_data,
+    objects,
     tilesizex,
     tilesizey,
     tiledata_size: Vec3i::new2(tiledata_x as IScalar, tiledata_y as IScalar),
     tiledata,
-    tile_gangdata
+    tile_gangdata,
+    entities,
+    routes
   })
 }
 
@@ -179,5 +208,17 @@ pub fn draw_shadows(level: &Level) {
 
       id += 1;
     }
+  }
+}
+
+pub fn draw_objects(level: &Level) {
+  for i in 0..level.objects.len() {
+    let object = &level.objects[i];
+
+    if object.sprite == -1 {
+      continue;
+    }
+
+    sprite::draw_sprite(object.sprite, object.pos, 0);
   }
 }

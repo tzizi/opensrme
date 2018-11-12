@@ -1,4 +1,5 @@
 use opensrme_common::*;
+use super::*;
 
 pub type Id = i32;
 pub type SpriteId = i16;
@@ -299,11 +300,17 @@ pub struct Level {
   pub routes: Vec<Route>
 }
 
+#[derive(Debug)]
+pub struct GameContext {
+  pub entities: Vec<entity::Entity>
+}
+
 pub struct Context {
   pub platform: Box<Platform>,
   pub time: Time,
   pub delta: Time,
   pub data: DataContext,
   pub images: Vec<PaletteImage>,
-  pub levels: Vec<Level>
+  pub levels: Vec<Level>,
+  pub game: GameContext
 }

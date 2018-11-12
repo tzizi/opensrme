@@ -153,6 +153,17 @@ pub fn read_level<T: DataInputStream>(file: &mut T) -> io::Result<Level> {
   })
 }
 
+pub fn load_entities(level: &Level) {
+  let mut context = globals::get_context();
+
+  for level_entity in level.entities.iter() {
+    let mut entity = entity::Entity::new(level_entity.class);
+    entity.pos = level_entity.pos.into();
+
+    context.game.entities.push(entity);
+  }
+}
+
 pub fn draw_level_layer(layer: &LevelLayer) {
   for x in 0..layer.size.x {
     for y in 0..layer.size.y {

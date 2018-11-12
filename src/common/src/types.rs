@@ -84,6 +84,26 @@ pub type FScalar = f64;
 pub type Vec3i = Vec3<IScalar>;
 pub type Vec3f = Vec3<FScalar>;
 
+impl From<Vec3i> for Vec3f {
+  fn from(other: Vec3i) -> Self {
+    Vec3f {
+      x: other.x.into(),
+      y: other.y.into(),
+      z: other.z.into()
+    }
+  }
+}
+
+impl From<Vec3f> for Vec3i {
+  fn from(other: Vec3f) -> Self {
+    Vec3i {
+      x: other.x as IScalar,
+      y: other.y as IScalar,
+      z: other.z as IScalar
+    }
+  }
+}
+
 impl<T: Add<Output=T>> Add<Vec3<T>> for Vec3<T> {
   type Output = Vec3<T>;
 

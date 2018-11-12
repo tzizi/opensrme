@@ -51,7 +51,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
     println!("{:?}", i);
   }*/
 
-  let level = read_level(&mut archive.open_file("Ultor.lvl").unwrap()).unwrap();
+  let level = read_level(&mut archive.open_file("Street.lvl").unwrap()).unwrap();
   println!("{} {}", level.tilesizex, level.tilesizey);
   println!("{:?}", level);
 
@@ -65,17 +65,24 @@ pub fn main(archive: &Archive, args: Vec<String>) {
     }
   }
 
+  let mut game = GameContext {
+    entities: vec![]
+  };
+
   let mut context = Context {
     platform: Box::new(platform),
     time: instant_get_millis(),
     delta: 0,
     data: datacontext,
     images,
-    levels: vec![]
+    levels: vec![],
+    game
   };
 
   set_context(context);
   let mut context = get_context();
+
+  load_entities(&level);
 
   //let image = context.platform.load_image_from_filename(archive, "Car_Police.png");
 
@@ -183,6 +190,10 @@ pub fn main(archive: &Archive, args: Vec<String>) {
       sprite::draw_sprite(current_sprite as SpriteId, Vec3i::new2(50, 50), 0);
     }
     sprite::draw_sprite(1368, Vec3i::new2(200, 200), 0);
+
+    for entity in context.game.entities.iter_mut() {
+      entity.draw();
+    }
 
     context.platform.swap();
 

@@ -58,9 +58,9 @@ pub enum EntityStance {
   // 4
   LyingDown = 4,
   // 5
-  Shooting = 5,
-  // 6, also shooting?
-  Stance6 = 6,
+  Aiming = 5,
+  // 6
+  Shooting = 6,
   // 7
   Punching = 7,
   // 8
@@ -103,7 +103,13 @@ pub struct Entity {
   pub entity_type: EntityType,
   pub pos: Vec3f,
   pub angle: Angle,
-  pub stance: EntityStance
+  pub prev_pos: Vec3f,
+  pub prev_angle: Angle,
+  pub walking_direction: Vec3f,
+  pub walking_angle: Angle,
+  pub stance: EntityStance,
+  pub stance_millis: Time,
+  pub speed: FScalar
 }
 
 impl Entity {
@@ -115,7 +121,13 @@ impl Entity {
       entity_type: get_entitytype(context.data.classes[class as usize].entity_type),
       pos: Vec3f::new2(0., 0.),
       angle: 0.,
-      stance: EntityStance::Standing
+      prev_pos: Vec3f::new2(0., 0.),
+      prev_angle: 0.,
+      walking_direction: Vec3f::new2(0., 0.),
+      walking_angle: 0.,
+      stance: EntityStance::Standing,
+      stance_millis: 0,
+      speed: 0.
     }
   }
 
@@ -136,8 +148,101 @@ impl Entity {
 }
 
 
+fn update_prev(entity: &mut Entity) {
+  entity.prev_pos = entity.pos;
+  entity.prev_angle = entity.angle;
+}
 
-pub fn draw_person(entity: &mut Entity) {
+fn set_new_stance(entity: &mut Entity, newstance: EntityStance) {
+  if entity.stance == newstance {
+    return;
+  }
+
+  entity.stance = newstance;
+  entity.stance_millis = 0;
+}
+
+fn step_person(entity: &mut Entity) -> bool {
+  if entity.stance == EntityStance::Dead {
+    return true;
+  }
+
+  update_prev(entity);
+
+  match entity.stance {
+    EntityStance::Punching => {
+      // TODO
+    },
+    EntityStance::Shooting => {
+      // TODO
+    },
+    EntityStance::Aiming => {
+      if entity.stance_millis > 1000 {
+        set_new_stance(entity, EntityStance::Standing)
+      }
+    },
+    EntityStance::LyingDown => {
+      if entity.stance_millis > 3000 {
+        set_new_stance(entity, EntityStance::Standing)
+      }
+
+      return true;
+    },
+    _ => {}
+  }
+
+  // TODO: step route
+  return false;
+}
+
+fn pick_sidewalk_direction(entity: &mut Entity) {
+  let angle: Angle = util::pick_int(4) as f64 * util::HALF_PI;
+  let class = entity.get_class().clone();
+  entity.walking_direction.x = class.width * angle.cos();
+  entity.walking_direction.y = class.height * angle.sin();
+  entity.walking_angle = angle;
+}
+
+fn move_forward(entity: &mut Entity, delta: Time, speed: FScalar) {
+  if speed == 0. {
+    return;
+  }
+
+  let amount = delta as FScalar * speed;
+  entity.pos.x += amount * entity.angle.cos();
+  entity.pos.y += amount * entity.angle.sin();
+}
+
+fn step_sidewalk_path(entity: &mut Entity, delta: Time) -> bool {
+  if step_person(entity) {
+    return true;
+  }
+
+  let context = globals::get_context();
+
+  match entity.stance {
+    EntityStance::Standing => {
+      entity.speed = 15. + util::pick_float(15.);
+      pick_sidewalk_direction(entity);
+      set_new_stance(entity, EntityStance::Walking);
+    },
+    EntityStance::Walking => {
+      let old_angle = entity.angle;
+
+      entity.angle = entity.walking_angle;
+
+      let speed = entity.speed;
+      move_forward(entity, delta, speed);
+
+      //if !level::pos_is_sidewalk(context.game.entities
+    },
+    _ => {}
+  }
+
+  return false;
+}
+
+fn draw_person(entity: &mut Entity) {
   if entity.stance == EntityStance::Riding {
     return;
   }
@@ -160,7 +265,7 @@ pub fn draw_person(entity: &mut Entity) {
   sprite::draw_sprite(current_sprite, entity.pos.into(), 0);
 }
 
-pub fn draw_vehicle(entity: &mut Entity) {
+fn draw_vehicle(entity: &mut Entity) {
   if entity.class == 38 || entity.class == 39 {
     // TODO: draw motorcycle
     return;

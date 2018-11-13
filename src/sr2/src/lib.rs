@@ -1,5 +1,6 @@
 extern crate opensrme_common;
 extern crate encoding;
+extern crate rand;
 
 mod types;
 use types::*;
@@ -12,6 +13,7 @@ mod level;
 use level::*;
 mod entity;
 mod route;
+mod util;
 
 #[macro_use]
 use opensrme_common::*;
@@ -35,6 +37,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
   platform.swap();
 
   let datacontext = read_bin_all(archive).unwrap();
+  println!("{:?}", datacontext.vehicles);
 
   let mut images = vec![];
   for i in datacontext.images.iter() {
@@ -53,7 +56,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
   let level = read_level(&mut archive.open_file("Street.lvl").unwrap()).unwrap();
   println!("{} {}", level.tilesizex, level.tilesizey);
-  println!("{:?}", level);
+  //println!("{:?}", level);
 
   if false {
     for y in 0..level.tiledata_size.y {
@@ -66,7 +69,8 @@ pub fn main(archive: &Archive, args: Vec<String>) {
   }
 
   let mut game = GameContext {
-    entities: vec![]
+    entities: vec![],
+    levelid: 0
   };
 
   let mut context = Context {

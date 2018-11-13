@@ -43,7 +43,7 @@ pub struct Image {
   pub size: Vec3i
 }
 
-pub type Angle = f32;
+pub type Angle = f64;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Vec3<T> {

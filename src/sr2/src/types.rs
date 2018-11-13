@@ -8,13 +8,15 @@ pub type ClipId = Id;
 pub type EffectId = Id;
 pub type ClassId = Id;
 pub type RouteId = Id;
+pub type ItemId = Id;
+pub type SoundId = Id;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Palette {
   pub colors: Vec<Color>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Font {
   pub name: String,
   pub palette: i32,
@@ -24,13 +26,13 @@ pub struct Font {
   pub size_addition: i16
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Language {
   pub strings: Vec<String>,
   pub fontid: i16
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum DrawShape {
   Line,
   FillRect,
@@ -39,7 +41,7 @@ pub enum DrawShape {
   DrawArc
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum DrawCommand {
   Invalid,
 
@@ -86,14 +88,14 @@ pub enum DrawCommand {
   },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Sprite {
   pub aabb: Vec<i16>,
   pub draw: Vec<DrawCommand>
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PaletteImage {
   pub filename: String,
   pub image: PlatformId
@@ -102,7 +104,7 @@ pub struct PaletteImage {
 // [orientation][frames]
 pub type Clip = Vec<Vec<SpriteId>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Sound {
   pub filename: String,
   pub mime: String,
@@ -110,7 +112,7 @@ pub struct Sound {
   pub deferred_load: bool
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Item {
   // 0: weapon
   // 1: food
@@ -124,7 +126,7 @@ pub struct Item {
   pub sprite: SpriteId
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Quest {
   // 1 = ?
   // 2 = active
@@ -138,7 +140,7 @@ pub struct Quest {
   pub levelid: i32
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Gang {
   pub name: TextId,
   pub sprite: SpriteId,
@@ -147,14 +149,14 @@ pub struct Gang {
   pub unk1: i32
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct EffectSpawner {
   pub effect: EffectId,
   pub delay: u16,
   pub position: [i32; 3]
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum EffectModifierOperation {
   // values[0] = multiplier (* secs_elapsed)
   // values[1] = offset
@@ -180,7 +182,7 @@ pub enum EffectModifierOperation {
   Bounce
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct EffectModifierInfo {
   pub operation: EffectModifierOperation,
   pub time_addition: i32, // always 0?
@@ -191,14 +193,14 @@ pub struct EffectModifierInfo {
   pub variable1: i32
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EffectModifier {
   pub effect: EffectId,
   pub values: Vec<Vec<f32>>,
   pub infos: Vec<EffectModifierInfo>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EffectType {
   Clip(ClipId), // 0
   Spawner(Vec<EffectSpawner>), // 1
@@ -213,7 +215,7 @@ pub enum EffectType {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Effect {
   pub should_be_2: i32,
   pub unk1: i32,
@@ -221,7 +223,7 @@ pub struct Effect {
   pub effect_type: EffectType
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct EntityClass {
   pub entity_type: i32,
   pub clip: ClipId,
@@ -233,7 +235,33 @@ pub struct EntityClass {
   pub unk3: i32
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum WeaponType {
+  Unknown = -1,
+  Melee = 0,
+  Pistol = 1,
+  SMG = 2,
+  Assault = 3,
+  Heavy = 4
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Weapon {
+  pub item: ItemId, // 0
+  pub weapon_type: WeaponType, // 1
+  pub unk1: i16, // 2
+  pub cooldown: i16, // 3
+  pub bullet_area: FScalar, // 4
+  pub item_increment: i8, // 5
+  pub sound: SoundId // 6
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Vehicle {
+  pub gears: [FScalar; 7]
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DataContext {
   pub palettes: Vec<Palette>,
   pub fonts: Vec<Font>,
@@ -246,7 +274,9 @@ pub struct DataContext {
   pub quests: Vec<Quest>,
   pub gangs: Vec<Gang>,
   pub effects: Vec<Effect>,
-  pub classes: Vec<EntityClass>
+  pub classes: Vec<EntityClass>,
+  pub weapons: Vec<Weapon>,
+  pub vehicles: Vec<Vehicle>
 }
 
 #[derive(Debug)]
@@ -302,6 +332,7 @@ pub struct Level {
 
 #[derive(Debug)]
 pub struct GameContext {
+  pub levelid: usize,
   pub entities: Vec<entity::Entity>
 }
 

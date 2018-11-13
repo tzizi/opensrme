@@ -474,6 +474,64 @@ fn read_classes<T: DataInputStream>(file: &mut T) -> io::Result<Vec<EntityClass>
   Ok(classes)
 }
 
+fn read_weapons<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Weapon>> {
+  let weapons_amt = file.read_short()?;
+
+  let mut weapons = vec![];
+
+  for _i in 0..weapons_amt {
+    let item = file.readInt()?;
+    let weapon_type_id = file.readInt()?;
+
+    let weapon_type = match weapon_type_id {
+      0 => WeaponType::Melee,
+      1 => WeaponType::Pistol,
+      2 => WeaponType::SMG,
+      3 => WeaponType::Assault,
+      4 => WeaponType::Heavy,
+      _ => WeaponType::Unknown
+    };
+
+    let unk1 = file.read_short()?;
+    let cooldown = file.read_short()?;
+    let bullet_area = (file.readInt()? as FScalar) / 65536.0;
+    let item_increment = file.read_byte()?;
+    let sound = file.readInt()?;
+
+    weapons.push(Weapon {
+      item,
+      weapon_type,
+      unk1,
+      cooldown,
+      bullet_area,
+      item_increment,
+      sound
+    });
+  }
+
+  Ok(weapons)
+}
+
+fn read_vehicles<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Vehicle>> {
+  let vehicles_amt = file.read_short()?;
+
+  let mut vehicles = vec![];
+
+  for _i in 0..vehicles_amt {
+    let mut vehicle = Vehicle {
+      gears: [0.; 7]
+    };
+
+    for j in 0..7 {
+      vehicle.gears[j] = (file.readInt()? as FScalar) / 65536.0;
+    }
+
+    vehicles.push(vehicle);
+  }
+
+  Ok(vehicles)
+}
+
 pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   let mut context = DataContext {
     palettes: vec![],
@@ -487,7 +545,9 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
     quests: vec![],
     gangs: vec![],
     effects: vec![],
-    classes: vec![]
+    classes: vec![],
+    weapons: vec![],
+    vehicles: vec![]
   };
 
   let mut contents = archive.open_file("bin.all")?;
@@ -503,6 +563,8 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   context.gangs = read_gangs(&mut contents).unwrap();
   context.effects = read_effects(&mut contents).unwrap();
   context.classes = read_classes(&mut contents).unwrap();
+  context.weapons = read_weapons(&mut contents).unwrap();
+  context.vehicles = read_vehicles(&mut contents).unwrap();
 
   Ok(context)
 }

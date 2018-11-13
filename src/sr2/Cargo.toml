@@ -6,6 +6,7 @@ authors = ["tzizi"]
 [dependencies]
 "opensrme_common" = { path = "../common" }
 encoding = "0.2"
+rand = "*"
 
 [lib]
 name = "opensrme_sr2"

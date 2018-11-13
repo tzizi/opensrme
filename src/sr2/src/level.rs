@@ -233,3 +233,26 @@ pub fn draw_objects(level: &Level) {
     sprite::draw_sprite(object.sprite, object.pos, 0);
   }
 }
+
+pub fn tilepos_to_pos(tilepos: Vec3i) -> Vec3f {
+  Vec3f::new2((tilepos.x as FScalar) * 24., (tilepos.y as FScalar) * 24.)
+}
+
+pub fn pos_to_tilepos(pos: Vec3f) -> Vec3i {
+  Vec3i::new2((pos.x / 24.) as IScalar, (pos.y / 24.) as IScalar)
+}
+
+pub fn get_tiledata_for_pos(level: &Level, pos: Vec3f) -> i8 {
+  let tilepos = pos_to_tilepos(pos);
+  if tilepos.x < 0 || tilepos.y < 0 || tilepos.x > level.tiledata_size.x || tilepos.y > level.tiledata_size.y {
+    return 1;
+  }
+
+  return level.tiledata[(tilepos.y * level.tiledata_size.x + tilepos.x) as usize];
+}
+
+pub fn pos_is_sidewalk(level: &Level, pos: Vec3f) -> bool {
+  let tiledata = get_tiledata_for_pos(level, pos);
+
+  tiledata == 9 || tiledata == 36
+}

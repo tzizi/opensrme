@@ -532,6 +532,20 @@ fn read_vehicles<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Vehicle>> {
   Ok(vehicles)
 }
 
+fn read_businesses<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Business>> {
+  let businesses_amt = file.read_short()?;
+
+  let mut businesses = vec![];
+
+  for _i in 0..businesses_amt {
+    businesses.push(Business {
+      sprite: file.read_short()?
+    });
+  }
+
+  Ok(businesses)
+}
+
 pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   let mut context = DataContext {
     palettes: vec![],
@@ -547,7 +561,8 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
     effects: vec![],
     classes: vec![],
     weapons: vec![],
-    vehicles: vec![]
+    vehicles: vec![],
+    businesses: vec![]
   };
 
   let mut contents = archive.open_file("bin.all")?;
@@ -565,6 +580,7 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   context.classes = read_classes(&mut contents).unwrap();
   context.weapons = read_weapons(&mut contents).unwrap();
   context.vehicles = read_vehicles(&mut contents).unwrap();
+  context.businesses = read_businesses(&mut contents).unwrap();
 
   Ok(context)
 }

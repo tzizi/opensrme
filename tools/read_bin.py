@@ -449,12 +449,12 @@ def read_weapons():
 
 read_weapons()
 
-def read_unk1():
-    unk1_len = read_short()
-    unk1 = []
+def read_gears():
+    gears_len = read_short()
+    gears = []
 
-    for i in range(unk1_len):
-        unk1.append([
+    for i in range(gears_len):
+        gears.append([
             read_int(),
             read_int(),
             read_int(),
@@ -464,5 +464,14 @@ def read_unk1():
             read_int()
         ])
         print(i)
-        pprint.pprint(unk1[i])
-read_unk1()
+        pprint.pprint(gears[i])
+read_gears()
+
+def read_businesses():
+    businesses_len = read_short()
+    businesses = []
+
+    for i in range(businesses_len):
+        businesses.append(read_short()) # sprite id
+    pprint.pprint(businesses)
+read_businesses()

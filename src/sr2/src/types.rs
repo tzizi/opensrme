@@ -261,6 +261,12 @@ pub struct Vehicle {
   pub gears: [FScalar; 7]
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Business {
+  // minimap sprite id
+  pub sprite: SpriteId
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataContext {
   pub palettes: Vec<Palette>,
@@ -276,7 +282,8 @@ pub struct DataContext {
   pub effects: Vec<Effect>,
   pub classes: Vec<EntityClass>,
   pub weapons: Vec<Weapon>,
-  pub vehicles: Vec<Vehicle>
+  pub vehicles: Vec<Vehicle>,
+  pub businesses: Vec<Business>
 }
 
 #[derive(Debug)]

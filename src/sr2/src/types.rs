@@ -279,6 +279,20 @@ pub struct RobberyItem {
   pub rotations: Vec<RobberyItemRotation>
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct ConversationItem {
+  pub name: TextId,
+  pub text: TextId,
+  pub sprite: SpriteId
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Conversation {
+  pub can_redraw: bool,
+  pub tutorial: bool,
+  pub items: Vec<ConversationItem>
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataContext {
   pub palettes: Vec<Palette>,
@@ -296,7 +310,8 @@ pub struct DataContext {
   pub weapons: Vec<Weapon>,
   pub vehicles: Vec<Vehicle>,
   pub businesses: Vec<Business>,
-  pub robbery_items: Vec<RobberyItem>
+  pub robbery_items: Vec<RobberyItem>,
+  pub conversations: Vec<Conversation>
 }
 
 #[derive(Debug)]

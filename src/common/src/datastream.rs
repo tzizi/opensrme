@@ -8,6 +8,7 @@ pub trait DataInputStream: ReadBytesExt {
   fn read_amount(&mut self, amount: usize) -> io::Result<Vec<i8>>;
   fn read_amount_as_string(&mut self, amount: usize) -> io::Result<String>;
   fn read_byte(&mut self) -> io::Result<i8>;
+  fn read_boolean(&mut self) -> io::Result<bool>;
   fn read_unsigned_byte(&mut self) -> io::Result<u8>;
   fn read_short(&mut self) -> io::Result<i16>;
   fn read_unsigned_short(&mut self) -> io::Result<u16>;
@@ -48,6 +49,10 @@ impl<T: Read+Seek> DataInputStream for T {
 
   fn read_byte(&mut self) -> io::Result<i8> {
     Ok(self.read_unsigned_byte()? as i8)
+  }
+
+  fn read_boolean(&mut self) -> io::Result<bool> {
+    Ok(self.read_unsigned_byte()? != 0)
   }
 
   fn read_unsigned_byte(&mut self) -> io::Result<u8> {

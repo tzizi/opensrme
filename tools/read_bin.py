@@ -495,3 +495,27 @@ def read_robbery_items():
         robbery_items.append(array1)
     pprint.pprint(robbery_items)
 read_robbery_items()
+
+def read_dialog_texts():
+    texts_len = read_short()
+    texts = []
+
+    for i in range(texts_len):
+        can_redraw = read_boolean()
+        is_tutorial = read_boolean()
+        conversation_len = read_short()
+        conversation = []
+        for j in range(conversation_len):
+            current_conversation = {
+                "name": languages[0][read_int()],
+                "text": languages[0][read_int()],
+                "sprite": read_short()
+            }
+            conversation.append(current_conversation)
+        texts.append({
+            "can_redraw": can_redraw,
+            "is_tutorial": is_tutorial,
+            "conversation": conversation
+        })
+    pprint.pprint(texts)
+read_dialog_texts()

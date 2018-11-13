@@ -546,6 +546,43 @@ fn read_businesses<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Business>
   Ok(businesses)
 }
 
+fn read_robbery_items<T: DataInputStream>(file: &mut T) -> io::Result<Vec<RobberyItem>> {
+  let robbery_items_amt = file.read_short()?;
+
+  let mut robbery_items = vec![];
+
+  for _i in 0..robbery_items_amt {
+    let worth = file.readInt()?;
+
+    let rotations_amt = file.read_short()?;
+    let mut rotations = vec![];
+
+    for _j in 0..rotations_amt {
+      let sprite = file.read_short()?;
+
+      let mut tiledata: [i32; 5] = [
+        file.readInt()?,
+        file.readInt()?,
+        file.readInt()?,
+        file.readInt()?,
+        file.readInt()?
+      ];
+
+      rotations.push(RobberyItemRotation {
+        sprite,
+        tiledata
+      });
+    }
+
+    robbery_items.push(RobberyItem {
+      worth,
+      rotations
+    });
+  }
+
+  Ok(robbery_items)
+}
+
 pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   let mut context = DataContext {
     palettes: vec![],
@@ -562,7 +599,8 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
     classes: vec![],
     weapons: vec![],
     vehicles: vec![],
-    businesses: vec![]
+    businesses: vec![],
+    robbery_items: vec![]
   };
 
   let mut contents = archive.open_file("bin.all")?;
@@ -581,6 +619,7 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   context.weapons = read_weapons(&mut contents).unwrap();
   context.vehicles = read_vehicles(&mut contents).unwrap();
   context.businesses = read_businesses(&mut contents).unwrap();
+  context.robbery_items = read_robbery_items(&mut contents).unwrap();
 
   Ok(context)
 }

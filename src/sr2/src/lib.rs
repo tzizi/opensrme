@@ -37,7 +37,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
   platform.swap();
 
   let datacontext = read_bin_all(archive).unwrap();
-  println!("{:?}", datacontext.vehicles);
+  println!("{:?}", datacontext.robbery_items);
 
   let mut images = vec![];
   for i in datacontext.images.iter() {
@@ -93,7 +93,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
   let mut running = true;
   let mut x = 0;
   let draw_clip = false;
-  let mut current_sprite: usize = 1063;
+  let mut current_sprite: usize = 1294;
   let mut current_orientation: usize = 0;
   let mut leftpressed = false;
   let mut offset = Vec3i::new2(0, 0);

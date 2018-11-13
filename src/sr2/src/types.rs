@@ -267,6 +267,18 @@ pub struct Business {
   pub sprite: SpriteId
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct RobberyItemRotation {
+  pub sprite: SpriteId,
+  pub tiledata: [i32; 5]
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RobberyItem {
+  pub worth: i32,
+  pub rotations: Vec<RobberyItemRotation>
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataContext {
   pub palettes: Vec<Palette>,
@@ -283,7 +295,8 @@ pub struct DataContext {
   pub classes: Vec<EntityClass>,
   pub weapons: Vec<Weapon>,
   pub vehicles: Vec<Vehicle>,
-  pub businesses: Vec<Business>
+  pub businesses: Vec<Business>,
+  pub robbery_items: Vec<RobberyItem>
 }
 
 #[derive(Debug)]

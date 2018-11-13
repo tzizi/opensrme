@@ -475,3 +475,23 @@ def read_businesses():
         businesses.append(read_short()) # sprite id
     pprint.pprint(businesses)
 read_businesses()
+
+def read_robbery_items():
+    robbery_items_len = read_short()
+    robbery_items = []
+
+    for i in range(robbery_items_len):
+        worth = read_int()
+        len1 = read_short()
+        array1 = []
+        # rotations
+        for j in range(len1):
+            array2 = []
+            array2.append(read_short()) # sprite id
+            array2.append(worth)
+            for k in range(5):
+                array2.append(read_int())
+            array1.append(array2)
+        robbery_items.append(array1)
+    pprint.pprint(robbery_items)
+read_robbery_items()

@@ -616,6 +616,35 @@ fn read_conversations<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Conver
   Ok(conversations)
 }
 
+fn read_levels<T: DataInputStream>(file: &mut T) -> io::Result<Vec<LevelInfo>> {
+  let levels_amt = file.read_short()?;
+
+  let mut levels = vec![];
+
+  for _i in 0..levels_amt {
+    let path = file.read_utf()?;
+
+    let images_amt = file.read_short()?;
+    let mut images = vec![];
+    for _j in 0..images_amt {
+      let image = file.readInt()?;
+      let palette = file.readInt()?;
+
+      images.push(LevelImageInfo {
+        image,
+        palette
+      });
+    }
+
+    levels.push(LevelInfo {
+      path,
+      images
+    });
+  }
+
+  Ok(levels)
+}
+
 pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   let mut context = DataContext {
     palettes: vec![],
@@ -634,7 +663,8 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
     vehicles: vec![],
     businesses: vec![],
     robbery_items: vec![],
-    conversations: vec![]
+    conversations: vec![],
+    levels: vec![]
   };
 
   let mut contents = archive.open_file("bin.all")?;
@@ -655,6 +685,7 @@ pub fn read_bin_all(archive: &Archive) -> io::Result<DataContext> {
   context.businesses = read_businesses(&mut contents).unwrap();
   context.robbery_items = read_robbery_items(&mut contents).unwrap();
   context.conversations = read_conversations(&mut contents).unwrap();
+  context.levels = read_levels(&mut contents).unwrap();
 
   Ok(context)
 }

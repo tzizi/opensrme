@@ -10,6 +10,8 @@ pub type ClassId = Id;
 pub type RouteId = Id;
 pub type ItemId = Id;
 pub type SoundId = Id;
+pub type ImageId = Id;
+pub type PaletteId = Id;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Palette {
@@ -293,6 +295,18 @@ pub struct Conversation {
   pub items: Vec<ConversationItem>
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct LevelImageInfo {
+  pub image: ImageId,
+  pub palette: PaletteId
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LevelInfo {
+  pub path: String,
+  pub images: Vec<LevelImageInfo>
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataContext {
   pub palettes: Vec<Palette>,
@@ -311,7 +325,8 @@ pub struct DataContext {
   pub vehicles: Vec<Vehicle>,
   pub businesses: Vec<Business>,
   pub robbery_items: Vec<RobberyItem>,
-  pub conversations: Vec<Conversation>
+  pub conversations: Vec<Conversation>,
+  pub levels: Vec<LevelInfo>
 }
 
 #[derive(Debug)]

@@ -37,7 +37,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
   platform.swap();
 
   let datacontext = read_bin_all(archive).unwrap();
-  println!("{:?}", datacontext.robbery_items);
+  println!("{:?}", datacontext.levels);
 
   let mut images = vec![];
   for i in datacontext.images.iter() {

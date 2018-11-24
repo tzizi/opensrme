@@ -121,6 +121,9 @@ pub trait Platform {
                  rotate: Option<Rotate>,
                  x_dest: IScalar, y_dest: IScalar);
   fn fill_rect(&mut self, x: IScalar, y: IScalar, width: IScalar, height: IScalar);
+  fn fill_rect_vec(&mut self, pos: Vec3i, size: Vec3i) {
+    self.fill_rect(pos.x, pos.y, size.x, size.y);
+  }
 
   fn swap(&mut self);
 }

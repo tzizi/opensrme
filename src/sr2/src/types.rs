@@ -380,10 +380,18 @@ pub struct Level {
   pub routes: Vec<Route>
 }
 
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Camera {
+  pub pos: Vec3i,
+  pub size: Vec3i,
+  pub shake: Vec3i
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct GameContext {
   pub level: Level,
-  pub entities: Vec<entity::Entity>
+  pub entities: Vec<entity::Entity>,
+  pub camera: Camera
 }
 
 pub struct Context {

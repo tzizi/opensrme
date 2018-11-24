@@ -71,7 +71,8 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
   let mut game = GameContext {
     entities: vec![],
-    level: level
+    level: level,
+    camera: Camera::default()
   };
 
   let mut context = Context {
@@ -88,6 +89,8 @@ pub fn main(archive: &Archive, args: Vec<String>) {
   set_context(context);
   let mut context = get_context();
 
+  context.game.camera.size = Vec3i::new2(240, 320);
+
   let level = &context.game.level;
 
   load_entities(&level);
@@ -97,7 +100,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
   let mut running = true;
   let mut x = 0;
   let draw_clip = false;
-  let mut current_sprite: usize = 988;
+  let mut current_sprite: usize = 1200;
   let mut current_orientation: usize = 0;
   let mut leftpressed = false;
   let mut offset = Vec3i::new2(0, 0);
@@ -181,6 +184,10 @@ pub fn main(archive: &Archive, args: Vec<String>) {
       offset = offset + context.input.mouse_delta;
     }
 
+    if context.input.buttons.get(&MouseButton::Right).is_some() {
+      context.game.camera.pos = context.input.mouse - offset - (context.game.camera.size / 2);
+    }
+
     x += 5;
     x = x % 500;
 
@@ -213,6 +220,25 @@ pub fn main(archive: &Archive, args: Vec<String>) {
     for entity in context.game.entities.iter_mut() {
       entity.draw();
     }
+
+    // draw camera
+    context.platform.set_color(Color { r: 255, g: 0, b: 0, a: 255 });
+    context.platform.fill_rect(context.game.camera.pos.x - 2,
+                               context.game.camera.pos.y - 2,
+                               context.game.camera.size.x + 2,
+                               4);
+    context.platform.fill_rect(context.game.camera.pos.x - 2,
+                               context.game.camera.pos.y + context.game.camera.size.y - 2,
+                               context.game.camera.size.x + 2,
+                               4);
+    context.platform.fill_rect(context.game.camera.pos.x - 2,
+                               context.game.camera.pos.y - 2,
+                               4,
+                               context.game.camera.size.y + 2);
+    context.platform.fill_rect(context.game.camera.pos.x + context.game.camera.size.x - 2,
+                               context.game.camera.pos.y - 2,
+                               4,
+                               context.game.camera.size.y + 2);
 
     context.platform.swap();
 

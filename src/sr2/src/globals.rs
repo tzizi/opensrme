@@ -17,9 +17,3 @@ pub fn set_context(context: Context) {
     global_context = Some(context);
   }
 }
-
-/*pub fn get_level() -> &'static Level {
-  let context = get_context();
-
-  //context.data
-}*/

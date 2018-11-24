@@ -2,7 +2,7 @@ use std::ops::*;
 
 pub type Time = u64;
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Default)]
 pub struct Color {
   pub r: u8,
   pub g: u8,
@@ -37,7 +37,7 @@ impl Color {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Image {
   pub data: Vec<u8>,
   pub size: Vec3i
@@ -45,7 +45,7 @@ pub struct Image {
 
 pub type Angle = f64;
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, Default)]
 pub struct Vec3<T> {
   pub x: T,
   pub y: T,

@@ -244,7 +244,7 @@ pub fn pos_to_tilepos(pos: Vec3f) -> Vec3i {
 
 pub fn get_tiledata_for_pos(level: &Level, pos: Vec3f) -> i8 {
   let tilepos = pos_to_tilepos(pos);
-  if tilepos.x < 0 || tilepos.y < 0 || tilepos.x > level.tiledata_size.x || tilepos.y > level.tiledata_size.y {
+  if tilepos.x < 0 || tilepos.y < 0 || tilepos.x >= level.tiledata_size.x || tilepos.y >= level.tiledata_size.y {
     return 1;
   }
 

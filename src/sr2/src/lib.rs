@@ -14,6 +14,7 @@ use level::*;
 mod entity;
 mod route;
 mod util;
+mod input;
 
 #[macro_use]
 use opensrme_common::*;
@@ -70,7 +71,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
   let mut game = GameContext {
     entities: vec![],
-    levelid: 0
+    level: level
   };
 
   let mut context = Context {
@@ -80,11 +81,14 @@ pub fn main(archive: &Archive, args: Vec<String>) {
     data: datacontext,
     images,
     levels: vec![],
-    game
+    game,
+    input: input::InputContext::default()
   };
 
   set_context(context);
   let mut context = get_context();
+
+  let level = &context.game.level;
 
   load_entities(&level);
 
@@ -93,85 +97,96 @@ pub fn main(archive: &Archive, args: Vec<String>) {
   let mut running = true;
   let mut x = 0;
   let draw_clip = false;
-  let mut current_sprite: usize = 1294;
+  let mut current_sprite: usize = 988;
   let mut current_orientation: usize = 0;
   let mut leftpressed = false;
   let mut offset = Vec3i::new2(0, 0);
 
   let mut last_second = context.time;
   let mut fps = 0;
+  let mut last_key_time: Time = 0;
   while running {
     let lasttime = context.time;
     context.time = instant_get_millis();
     context.delta = context.time - lasttime;
 
-    while let Some(event) = context.platform.poll_event() {
-      match event {
-        Event::Quit => {
-          running = false;
-          break
-        },
-        Event::Key { key, pressed } => {
-          if !pressed {
-            if key.scancode == 41 {
-              // esc
-              running = false;
-              break;
-            }
+    context.input.step();
 
-            if key.value == 'a' as u8 {
-              if current_sprite == 0 && draw_clip {
-                current_sprite = context.data.clips.len() - 1;
-              } else {
-                current_sprite -= 1;
-              }
-              current_orientation = 0;
-              if draw_clip {
-                println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
-              } else {
-                println!("{}", current_sprite);
-              }
-            } else if key.value == 'd' as u8 {
-              current_sprite += 1;
-              if current_sprite as usize >= context.data.clips.len() && draw_clip {
-                current_sprite = 0;
-              }
-              current_orientation = 0;
-              if draw_clip {
-                println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
-              } else {
-                println!("{}", current_sprite);
-              }
-            } else if key.value == 'w' as u8 {
-              if current_orientation == 0 {
-                current_orientation = context.data.clips[current_sprite].len() - 1;
-              } else {
-                current_orientation -= 1;
-              }
-            } else if key.value == 's' as u8 {
-              current_orientation += 1;
-              if current_orientation >= context.data.clips[current_sprite].len() {
-                current_orientation = 0;
-              }
-            }
+    while let Some(event) = context.platform.poll_event() {
+      if let Event::Quit = event {
+        running = false;
+        break;
+      }
+
+      context.input.process_platform_event(event);
+    }
+
+    if !running {
+      break;
+    }
+
+    for key in context.input.key_delta.iter() {
+      if !key.1 {
+        continue;
+      }
+
+      match key.0 {
+        input::InputKey::Exit => {
+          running = false;
+          break;
+        },
+        input::InputKey::Left => {
+          if current_sprite == 0 && draw_clip {
+            current_sprite = context.data.clips.len() - 1;
+          } else {
+            current_sprite -= 1;
+          }
+          current_orientation = 0;
+          if draw_clip {
+            println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
+          } else {
+            println!("{}", current_sprite);
           }
         },
-        Event::MouseButton { pressed, button } => {
-          if button == MouseButton::Left {
-            leftpressed = pressed;
+        input::InputKey::Right => {
+          current_sprite += 1;
+          if current_sprite as usize >= context.data.clips.len() && draw_clip {
+            current_sprite = 0;
+          }
+          current_orientation = 0;
+          if draw_clip {
+            println!("{} {:?}", current_sprite, context.data.clips[current_sprite as usize]);
+          } else {
+            println!("{}", current_sprite);
           }
         },
-        Event::MousePos { delta, .. } => {
-          if leftpressed {
-            offset = offset + delta;
+        input::InputKey::Up => {
+          if current_orientation == 0 {
+            current_orientation = context.data.clips[current_sprite].len() - 1;
+          } else {
+            current_orientation -= 1;
+          }
+        },
+        input::InputKey::Down => {
+          current_orientation += 1;
+          if current_orientation >= context.data.clips[current_sprite].len() {
+            current_orientation = 0;
           }
         },
         _ => {}
       }
     }
 
+    if context.input.buttons.get(&MouseButton::Left).is_some() {
+      offset = offset + context.input.mouse_delta;
+    }
+
     x += 5;
     x = x % 500;
+
+    for entity in context.game.entities.iter_mut() {
+      entity.step(context.delta);
+    }
 
     context.platform.set_color(Color { r: 0, g: 0, b: 0, a: 255 });
     context.platform.clear();

@@ -399,8 +399,8 @@ def read_classes():
             read_int(),
             # 2: default health
             read_short(),
-            # 3:
-            read_int(),
+            # 3: weight (float)
+            read_int() / 65536.0,
             # 4: x or y (float), width?
             read_int() / 65536.0,
             # 5: y or x (float), height?
@@ -442,6 +442,7 @@ def read_weapons():
             # 6: sound id
             read_int()
         ])
+        continue
         print(i)
         pprint.pprint(weapons[i])
         print(str(languages[0][items[weapons[i][0]][4]]))
@@ -463,6 +464,7 @@ def read_gears():
             read_int(),
             read_int()
         ])
+        continue
         print(i)
         pprint.pprint(gears[i])
 read_gears()
@@ -473,6 +475,7 @@ def read_businesses():
 
     for i in range(businesses_len):
         businesses.append(read_short()) # sprite id
+    return
     pprint.pprint(businesses)
 read_businesses()
 
@@ -493,6 +496,7 @@ def read_robbery_items():
                 array2.append(read_int())
             array1.append(array2)
         robbery_items.append(array1)
+    return
     pprint.pprint(robbery_items)
 read_robbery_items()
 
@@ -517,5 +521,6 @@ def read_dialog_texts():
             "is_tutorial": is_tutorial,
             "conversation": conversation
         })
+    return
     pprint.pprint(texts)
 read_dialog_texts()

@@ -329,7 +329,7 @@ pub struct DataContext {
   pub levels: Vec<LevelInfo>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LevelLayer {
   pub start: Vec3i,
   pub tilesize: Vec3i,
@@ -337,13 +337,13 @@ pub struct LevelLayer {
   pub tiles: Vec<i16>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct LevelObject {
   pub pos: Vec3i,
   pub sprite: SpriteId
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct RoutePart {
   // 0, 1, 2
   pub pos: Vec3f,
@@ -352,12 +352,12 @@ pub struct RoutePart {
   pub unk1: u8
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Route {
   pub parts: Vec<RoutePart>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LevelEntity {
   pub class: ClassId,
   pub pos: Vec3i,
@@ -365,7 +365,7 @@ pub struct LevelEntity {
   pub route: RouteId
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Level {
   pub layer1: LevelLayer,
   pub layer2: LevelLayer,
@@ -380,9 +380,9 @@ pub struct Level {
   pub routes: Vec<Route>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GameContext {
-  pub levelid: usize,
+  pub level: Level,
   pub entities: Vec<entity::Entity>
 }
 
@@ -393,5 +393,6 @@ pub struct Context {
   pub data: DataContext,
   pub images: Vec<PaletteImage>,
   pub levels: Vec<Level>,
-  pub game: GameContext
+  pub game: GameContext,
+  pub input: input::InputContext
 }

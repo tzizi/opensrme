@@ -3,6 +3,7 @@ use super::archive::*;
 use super::types::*;
 pub type PlatformId = usize;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct IdCache {
   current_id: PlatformId
 }
@@ -25,13 +26,13 @@ impl IdCache {
   }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Key {
   pub value: u8,
   pub scancode: i32
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Hash, Debug, Copy, Clone, Eq, PartialEq)]
 pub enum MouseButton {
   Unknown,
   Left,
@@ -39,13 +40,13 @@ pub enum MouseButton {
   Middle
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum MouseScroll {
   Up,
   Down
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Event {
   Quit,
   Key {
@@ -67,6 +68,7 @@ pub const FLIP_H: u8 = 1;
 pub const FLIP_V: u8 = 2;
 pub type Flip = u8;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Rotate {
   pub angle: FScalar, // 0 = no rotation, 1 = 360
   pub origin: Vec3i

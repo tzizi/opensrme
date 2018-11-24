@@ -97,7 +97,7 @@ pub fn get_entitytype(number: i32) -> EntityType {
   }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Entity {
   pub class: ClassId,
   pub entity_type: EntityType,
@@ -143,6 +143,25 @@ impl Entity {
       return draw_person(self);
     } else if entity_typeid >= 8 && entity_typeid <= 11 {
       return draw_vehicle(self);
+    }
+  }
+
+  pub fn step(&mut self, delta: Time) {
+    // TODO: check if hidden
+
+    self.stance_millis += delta;
+
+    match self.entity_type {
+      EntityType::Type1 => {
+        step_person(self);
+      },
+      EntityType::Pedestrian => {
+        step_sidewalk_path(self, delta);
+      },
+      EntityType::VehiclePedestrian => {
+        step_sidewalk_path(self, delta);
+      },
+      _ => {}
     }
   }
 }
@@ -208,7 +227,7 @@ fn move_forward(entity: &mut Entity, delta: Time, speed: FScalar) {
     return;
   }
 
-  let amount = delta as FScalar * speed;
+  let amount = (delta as FScalar) / 1000. * speed;
   entity.pos.x += amount * entity.angle.cos();
   entity.pos.y += amount * entity.angle.sin();
 }
@@ -234,7 +253,13 @@ fn step_sidewalk_path(entity: &mut Entity, delta: Time) -> bool {
       let speed = entity.speed;
       move_forward(entity, delta, speed);
 
-      //if !level::pos_is_sidewalk(context.game.entities
+      if !level::pos_is_sidewalk(&context.game.level,
+                                 entity.pos + entity.walking_direction) {
+        entity.pos.x = entity.prev_pos.x;
+        entity.pos.y = entity.prev_pos.y;
+        entity.angle = old_angle;
+        set_new_stance(entity, EntityStance::Standing);
+      }
     },
     _ => {}
   }

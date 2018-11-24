@@ -282,9 +282,9 @@ fn draw_person(entity: &mut Entity) {
 
   let clip = &context.data.clips[(class.clip + stance as i32) as usize];
   // TODO: get the correct index from the angle
-  let clip_angle = &clip[0];
+  let clip_angle = &clip[util::get_angle_in_clip(entity.angle, clip.len())];
   // TODO: animate properly
-  let current_sprite = clip_angle[0];
+  let current_sprite = clip_angle[util::get_frame_in_clip(entity.stance_millis, 700, clip_angle.len())];
 
   // TODO: palettes
   sprite::draw_sprite(current_sprite, entity.pos.into(), 0);

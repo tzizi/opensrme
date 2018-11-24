@@ -108,6 +108,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
   let mut last_second = context.time;
   let mut fps = 0;
   let mut last_key_time: Time = 0;
+  let mut entity_spawn_counter: usize = 0;
   while running {
     let lasttime = context.time;
     context.time = instant_get_millis();
@@ -190,6 +191,32 @@ pub fn main(archive: &Archive, args: Vec<String>) {
 
     x += 5;
     x = x % 500;
+
+    // entity spawn
+    loop {
+      let mut entity_found = true;
+      let entities_len = context.game.entities.len();
+      let entity = &mut context.game.entities[entity_spawn_counter % entities_len];
+      // todo: check for flag 0x10000 == 0
+      match entity.entity_type {
+        entity::EntityType::Player => {
+        },
+        entity::EntityType::Pedestrian => {
+          if (entity.pos.x as IScalar - context.game.camera.pos.x).abs() > 320 ||
+            (entity.pos.y as IScalar - context.game.camera.pos.y).abs() > 320 {
+              entity.pos = context.game.camera.pos.into();
+            }
+        },
+        _ => {
+          entity_found = false;
+        }
+      }
+
+      entity_spawn_counter += 1;
+      if entity_found {
+        break;
+      }
+    }
 
     for entity in context.game.entities.iter_mut() {
       entity.step(context.delta);

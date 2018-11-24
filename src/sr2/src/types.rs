@@ -387,6 +387,12 @@ pub struct Camera {
   pub shake: Vec3i
 }
 
+impl Camera {
+  pub fn middle(&self) -> Vec3i {
+    self.pos + (self.size / 2)
+  }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct GameContext {
   pub level: Level,

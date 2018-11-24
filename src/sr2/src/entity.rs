@@ -161,6 +161,10 @@ impl Entity {
       EntityType::VehiclePedestrian => {
         step_sidewalk_path(self, delta);
       },
+      EntityType::Gangster => {
+        // TODO
+        step_sidewalk_path(self, delta);
+      },
       _ => {}
     }
   }
@@ -304,7 +308,7 @@ fn draw_vehicle(entity: &mut Entity) {
 
   let clip = &context.data.clips[class.clip as usize];
   // TODO: palettes
-  let clip_angle = &clip[0];
+  let clip_angle = &clip[util::get_angle_in_clip(entity.angle, clip.len())];
   let current_sprite = clip_angle[0];
 
   sprite::draw_sprite(current_sprite, entity.pos.into(), 0);

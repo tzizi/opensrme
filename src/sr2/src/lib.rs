@@ -202,9 +202,15 @@ pub fn main(archive: &Archive, args: Vec<String>) {
         entity::EntityType::Player => {
         },
         entity::EntityType::Pedestrian => {
-          if (entity.pos.x as IScalar - context.game.camera.pos.x).abs() > 320 ||
-            (entity.pos.y as IScalar - context.game.camera.pos.y).abs() > 320 {
-              entity.pos = context.game.camera.pos.into();
+          if (entity.pos.x as IScalar - context.game.camera.middle().x).abs() > 320 ||
+            (entity.pos.y as IScalar - context.game.camera.middle().y).abs() > 320 {
+              entity.pos = context.game.camera.middle().into();
+            }
+        },
+        entity::EntityType::Gangster => {
+          if (entity.pos.x as IScalar - context.game.camera.middle().x).abs() > 320 ||
+            (entity.pos.y as IScalar - context.game.camera.middle().y).abs() > 320 {
+              entity.pos = context.game.camera.middle().into();
             }
         },
         _ => {

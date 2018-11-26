@@ -30,7 +30,7 @@ fn main() {
 
     if ok {
       println!("Playing {}", game.name);
-      return (game.main)(&archive, args[2..].to_vec());
+      return (game.main)(Box::new(archive), args[2..].to_vec());
     }
   }
 

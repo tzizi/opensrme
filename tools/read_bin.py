@@ -245,12 +245,12 @@ def read_items():
         # 4 = item name id
         # 5 = item desc id
         # 6 = sprite id
-        for i in range(6):
+        for x in range(6):
             item.append(read_int())
         item.append(read_short())
         items.append(item)
-        continue
-        print('%s %s' % (str(languages[0][item[4]]), str(item)))
+        #continue
+        print('%i %s %s' % (i, str(languages[0][item[4]]), str(item)))
 
 read_items()
 

@@ -153,15 +153,31 @@ pub fn read_level<T: DataInputStream>(file: &mut T) -> io::Result<Level> {
   })
 }
 
-pub fn load_entities(level: &Level) {
+pub fn get_level_from_levelid(levelid: LevelId) -> Level {
+  let context = globals::get_context();
+
+  if context.levels.contains_key(&levelid) {
+    context.levels.get(&levelid).unwrap().clone()
+  } else {
+    let level = read_level(&mut context.archive.open_file(&context.data.levels[levelid as usize].path[..]).unwrap()).unwrap();
+    context.levels.insert(levelid, level.clone());
+    level
+  }
+}
+
+pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
   let mut context = globals::get_context();
+
+  let mut entities = vec![];
 
   for level_entity in level.entities.iter() {
     let mut entity = entity::Entity::new(level_entity.class);
     entity.pos = level_entity.pos.into();
 
-    context.game.entities.push(entity);
+    entities.push(entity);
   }
+
+  entities
 }
 
 pub fn draw_level_layer(layer: &LevelLayer) {

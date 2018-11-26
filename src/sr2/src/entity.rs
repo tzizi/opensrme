@@ -135,7 +135,7 @@ impl Entity {
     &globals::get_context().data.classes[self.class as usize]
   }
 
-  pub fn draw(&mut self) {
+  pub fn draw(&self) {
     // TODO: check if hidden
 
     let entity_typeid = self.entity_type as i32;
@@ -241,8 +241,6 @@ fn step_sidewalk_path(entity: &mut Entity, delta: Time) -> bool {
     return true;
   }
 
-  let context = globals::get_context();
-
   match entity.stance {
     EntityStance::Standing => {
       entity.speed = 15. + util::pick_float(15.);
@@ -257,8 +255,7 @@ fn step_sidewalk_path(entity: &mut Entity, delta: Time) -> bool {
       let speed = entity.speed;
       move_forward(entity, delta, speed);
 
-      if !level::pos_is_sidewalk(&context.game.level,
-                                 entity.pos + entity.walking_direction) {
+      if !level::pos_is_sidewalk(&globals::get_game().level, entity.pos + entity.walking_direction) {
         entity.pos.x = entity.prev_pos.x;
         entity.pos.y = entity.prev_pos.y;
         entity.angle = old_angle;
@@ -271,12 +268,12 @@ fn step_sidewalk_path(entity: &mut Entity, delta: Time) -> bool {
   return false;
 }
 
-fn draw_person(entity: &mut Entity) {
+fn draw_person(entity: &Entity) {
   if entity.stance == EntityStance::Riding {
     return;
   }
 
-  let mut context = globals::get_context();
+  let context = globals::get_context();
   let class = entity.get_class();
 
   let mut stance = entity.stance;
@@ -294,7 +291,7 @@ fn draw_person(entity: &mut Entity) {
   sprite::draw_sprite(current_sprite, entity.pos.into(), 0);
 }
 
-fn draw_vehicle(entity: &mut Entity) {
+fn draw_vehicle(entity: &Entity) {
   if entity.class == 38 || entity.class == 39 {
     // TODO: draw motorcycle
     return;

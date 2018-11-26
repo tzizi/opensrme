@@ -154,10 +154,10 @@ pub fn check(archive: &Archive) -> std::io::Result<bool> {
                      "MIDlet-Name": "LEGO Star Wars 2"))
 }
 
-pub fn main(archive: &Archive, args: Vec<String>) {
+pub fn main(archive: Box<Archive>, args: Vec<String>) {
   //read_db(archive).unwrap();
   //read_outfits(archive).unwrap();
-  let language = read_language_file(archive, "en").unwrap();
+  let language = read_language_file(&(*archive), "en").unwrap();
 
   let mut i = 0;
   for string in language.strings.iter() {
@@ -165,7 +165,7 @@ pub fn main(archive: &Archive, args: Vec<String>) {
     i += 1;
   }
 
-  read_font_file(archive).unwrap();
+  read_font_file(&(*archive)).unwrap();
 }
 
 pub static GAME: Game = Game {

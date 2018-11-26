@@ -1,5 +1,4 @@
 use opensrme_common::*;
-use super::*;
 
 pub type Id = i32;
 pub type SpriteId = i16;
@@ -12,6 +11,7 @@ pub type ItemId = Id;
 pub type SoundId = Id;
 pub type ImageId = Id;
 pub type PaletteId = Id;
+pub type LevelId = Id;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Palette {
@@ -391,22 +391,4 @@ impl Camera {
   pub fn middle(&self) -> Vec3i {
     self.pos + (self.size / 2)
   }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct GameContext {
-  pub level: Level,
-  pub entities: Vec<entity::Entity>,
-  pub camera: Camera
-}
-
-pub struct Context {
-  pub platform: Box<Platform>,
-  pub time: Time,
-  pub delta: Time,
-  pub data: DataContext,
-  pub images: Vec<PaletteImage>,
-  pub levels: Vec<Level>,
-  pub game: GameContext,
-  pub input: input::InputContext
 }

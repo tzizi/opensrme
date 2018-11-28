@@ -85,6 +85,14 @@ impl GameScreen {
     Some(Vec3::new2(x, y))
   }
 
+  fn can_spawn_at(level: &Level, entity_type: entity::EntityType, pos: Vec3f) -> bool {
+    if entity_type.is_person() {
+      return level::pos_is_sidewalk(level, pos);
+    } else {
+      return false;
+    }
+  }
+
   fn find_entity_spawn_point(level: &Level, entity_type: entity::EntityType,
                              x: IScalar, y: IScalar, border: IScalar) -> Option<Vec3f> {
     // TODO: do proper checks
@@ -104,10 +112,8 @@ impl GameScreen {
           spawn_xy.y < level.tiledata_size.y {
             let pos = Vec3f::from(spawn_xy) * level.tilesize + level.tilesize / 2.;
 
-            if entity_type.is_person() {
-              if level::pos_is_sidewalk(&level, pos) {
-                return Some(pos);
-              }
+            if GameScreen::can_spawn_at(level, entity_type, pos) {
+              return Some(pos);
             }
           }
 

@@ -58,7 +58,7 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
   }*/
 
   let level = read_level(&mut archive.open_file("Street.lvl").unwrap()).unwrap();
-  println!("{} {}", level.tilesizex, level.tilesizey);
+  println!("{} {}", level.tilesize.x, level.tilesize.y);
   //println!("{:?}", level);
 
   if false {

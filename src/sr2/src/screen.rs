@@ -60,7 +60,77 @@ impl GameScreen {
     }
   }
 
-  fn spawn_entity(&mut self) {
+  fn get_spawn_xy(current: IScalar, max: IScalar) -> Option<Vec3i> {
+    if current >= max * 8 {
+      return None;
+    }
+
+    const values: [[IScalar; 2]; 4] = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+
+    let id: usize = (current % 4) as usize;
+
+    let mut x = max * values[id][0];
+    let mut y = max * values[id][1];
+
+    let temp = current / 4 + 1;
+    let mut mult = temp / 2;
+
+    if temp % 2 != 0 {
+      mult *= -1;
+    }
+
+    x += mult * values[id][1];
+    y += mult * values[id][0];
+
+    Some(Vec3::new2(x, y))
+  }
+
+  fn find_entity_spawn_point(level: &Level, entity_type: entity::EntityType,
+                             x: IScalar, y: IScalar, border: IScalar) -> Option<Vec3f> {
+    // TODO: do proper checks
+    let x = x / level.tilesize.x as IScalar;
+    let y = y / level.tilesize.x as IScalar;
+    let border = border / level.tilesize.x as IScalar;
+
+    let max = border * 8;
+    let mut current = util::pick_int(max);
+    loop {
+      let spawn_xy = GameScreen::get_spawn_xy(current, border);
+      if let Some(spawn_xy) = spawn_xy {
+        let spawn_xy = spawn_xy + Vec3i::new2(x, y);
+
+        if spawn_xy.x >= 0 && spawn_xy.y >= 0 &&
+          spawn_xy.x < level.tiledata_size.x &&
+          spawn_xy.y < level.tiledata_size.y {
+            let pos = Vec3f::from(spawn_xy) * level.tilesize + level.tilesize / 2.;
+
+            if entity_type.is_person() {
+              if level::pos_is_sidewalk(&level, pos) {
+                return Some(pos);
+              }
+            }
+          }
+
+        current += 1;
+      } else {
+        break;
+      }
+    }
+
+    None
+  }
+
+  fn apply_entity_spawn_point(level: &Level, entity: &mut entity::Entity, pos: Vec3i, border: IScalar) -> bool {
+    let pos = GameScreen::find_entity_spawn_point(level, entity.entity_type, pos.x, pos.y, border);
+    if let Some(pos) = pos {
+      entity.pos = pos;
+      true
+    } else {
+      false
+    }
+  }
+
+  fn step_entity_spawn(&mut self) {
     loop {
       let mut entity_found = true;
       let entities_len = self.entities.len();
@@ -71,13 +141,13 @@ impl GameScreen {
         entity::EntityType::Pedestrian => {
           if (entity.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
             (entity.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
-              entity.pos = self.camera.middle().into();
+              GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
             }
         },
         entity::EntityType::Gangster => {
           if (entity.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
             (entity.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
-              entity.pos = self.camera.middle().into();
+              GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
             }
         },
         _ => {
@@ -100,7 +170,7 @@ impl Screen for GameScreen {
 
   fn step(&mut self, delta: Time) {
     self.process_input();
-    self.spawn_entity();
+    self.step_entity_spawn();
 
     for entity in self.entities.iter_mut() {
       entity.step(delta);

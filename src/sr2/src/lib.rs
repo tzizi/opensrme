@@ -11,6 +11,8 @@ mod bin_all;
 use bin_all::*;
 mod level;
 use level::*;
+mod vehicle;
+mod person;
 mod entity;
 mod route;
 mod util;

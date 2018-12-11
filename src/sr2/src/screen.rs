@@ -6,14 +6,15 @@ pub trait Screen {
   fn draw(&mut self) {}
 }
 
-#[derive(Debug, Clone, PartialEq)]
+//#[derive(Debug, Clone, PartialEq)]
 pub struct GameScreen {
   pub level: Level,
   pub entities: Vec<entity::Entity>,
   pub main_camera_pos: Vec3i,
   pub camera: Camera,
 
-  entity_spawn_counter: usize
+  pub vehicle_state: vehicle::VehicleState,
+  pub entity_spawn_counter: usize
 }
 
 impl GameScreen {
@@ -26,6 +27,7 @@ impl GameScreen {
       main_camera_pos: Vec3i::default(),
       camera: Camera::default(),
 
+      vehicle_state: vehicle::VehicleState::new(),
       entity_spawn_counter: 0
     };
 
@@ -87,9 +89,17 @@ impl GameScreen {
 
   fn can_spawn_at(level: &Level, entity_type: entity::EntityType, pos: Vec3f) -> bool {
     if entity_type.is_person() {
-      return level::pos_is_sidewalk(level, pos);
+      level::pos_is_sidewalk(level, pos)
+    } else if entity_type.is_vehicle() {
+      let tiledata = level::get_tiledata_for_pos(level, pos);
+      if tiledata >= 10 && tiledata <= 13 {
+        //if game.entity_spawn_counter % 4 != tiledata - 10 { return false; }
+        return true;
+      } else {
+        return false;
+      }
     } else {
-      return false;
+      false
     }
   }
 
@@ -127,9 +137,9 @@ impl GameScreen {
   }
 
   fn apply_entity_spawn_point(level: &Level, entity: &mut entity::Entity, pos: Vec3i, border: IScalar) -> bool {
-    let pos = GameScreen::find_entity_spawn_point(level, entity.entity_type, pos.x, pos.y, border);
+    let pos = GameScreen::find_entity_spawn_point(level, entity.base.entity_type, pos.x, pos.y, border);
     if let Some(pos) = pos {
-      entity.pos = pos;
+      entity.base.pos = pos;
       true
     } else {
       false
@@ -142,17 +152,23 @@ impl GameScreen {
       let entities_len = self.entities.len();
       let entity = &mut self.entities[self.entity_spawn_counter % entities_len];
       // todo: check for flag 0x10000 == 0
-      match entity.entity_type {
+      match entity.base.entity_type {
         entity::EntityType::Player => {},
         entity::EntityType::Pedestrian => {
-          if (entity.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
-            (entity.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
+          if (entity.base.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
+            (entity.base.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
               GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
             }
         },
         entity::EntityType::Gangster => {
-          if (entity.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
-            (entity.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
+          if (entity.base.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
+            (entity.base.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
+              GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
+            }
+        },
+        entity::EntityType::MovingVehicle => {
+          if (entity.base.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
+            (entity.base.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
               GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
             }
         },
@@ -176,6 +192,9 @@ impl Screen for GameScreen {
 
   fn step(&mut self, delta: Time) {
     self.process_input();
+
+    self.vehicle_state.step();
+
     self.step_entity_spawn();
 
     for entity in self.entities.iter_mut() {

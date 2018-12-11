@@ -13,6 +13,8 @@ pub type ImageId = Id;
 pub type PaletteId = Id;
 pub type LevelId = Id;
 
+pub type LevelTileData = i8;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Palette {
   pub colors: Vec<Color>
@@ -372,7 +374,7 @@ pub struct Level {
   pub objects: Vec<LevelObject>,
   pub tilesize: Vec3f,
   pub tiledata_size: Vec3i,
-  pub tiledata: Vec<i8>,
+  pub tiledata: Vec<LevelTileData>,
   pub tile_gangdata: Vec<i8>,
 
   pub entities: Vec<LevelEntity>,

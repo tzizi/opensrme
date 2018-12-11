@@ -171,7 +171,7 @@ pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
 
   for level_entity in level.entities.iter() {
     let mut entity = entity::Entity::new(level_entity.class);
-    entity.pos = level_entity.pos.into();
+    entity.base.pos = level_entity.pos.into();
 
     entities.push(entity);
   }
@@ -257,13 +257,16 @@ pub fn pos_to_tilepos(pos: Vec3f) -> Vec3i {
   Vec3i::new2((pos.x / 24.) as IScalar, (pos.y / 24.) as IScalar)
 }
 
-pub fn get_tiledata_for_pos(level: &Level, pos: Vec3f) -> i8 {
-  let tilepos = pos_to_tilepos(pos);
+pub fn get_tiledata_for_tilepos(level: &Level, tilepos: Vec3i) -> i8 {
   if tilepos.x < 0 || tilepos.y < 0 || tilepos.x >= level.tiledata_size.x || tilepos.y >= level.tiledata_size.y {
     return 1;
   }
 
   return level.tiledata[(tilepos.y * level.tiledata_size.x + tilepos.x) as usize];
+}
+
+pub fn get_tiledata_for_pos(level: &Level, pos: Vec3f) -> i8 {
+  get_tiledata_for_tilepos(level, pos_to_tilepos(pos))
 }
 
 pub fn pos_is_sidewalk(level: &Level, pos: Vec3f) -> bool {

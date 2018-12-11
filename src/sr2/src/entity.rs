@@ -108,60 +108,122 @@ pub fn get_entitytype(number: i32) -> EntityType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Entity {
+pub struct EntityBase {
   pub class: ClassId,
   pub entity_type: EntityType,
   pub pos: Vec3f,
   pub angle: Angle,
   pub prev_pos: Vec3f,
   pub prev_angle: Angle,
-  pub walking_direction: Vec3f,
-  pub walking_angle: Angle,
+
   pub stance: EntityStance,
   pub stance_millis: Time,
+
   pub speed: FScalar
 }
 
-impl Entity {
-  pub fn new(class: ClassId) -> Self {
-    let context = get_context();
+impl EntityBase {
+  pub fn update_prev(&mut self) {
+    self.prev_pos = self.pos;
+    self.prev_angle = self.angle;
+  }
 
-    Entity {
-      class,
-      entity_type: get_entitytype(context.data.classes[class as usize].entity_type),
-      pos: Vec3f::new2(0., 0.),
-      angle: 0.,
-      prev_pos: Vec3f::new2(0., 0.),
-      prev_angle: 0.,
-      walking_direction: Vec3f::new2(0., 0.),
-      walking_angle: 0.,
-      stance: EntityStance::Standing,
-      stance_millis: 0,
-      speed: 0.
+  pub fn move_forward(&mut self, delta: Time) {
+    if self.speed == 0. {
+      return;
     }
+
+    let amount = (delta as FScalar) / 1000. * self.speed;
+    self.pos.x += amount * self.angle.cos();
+    self.pos.y += amount * self.angle.sin();
   }
 
   pub fn get_class(&self) -> &EntityClass {
     &globals::get_context().data.classes[self.class as usize]
   }
 
+  pub fn set_new_stance(&mut self, newstance: EntityStance) {
+    if self.stance == newstance {
+      return;
+    }
+
+    self.stance = newstance;
+    self.stance_millis = 0;
+  }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PersonData {
+  pub walking_direction: Vec3f,
+  pub walking_angle: Angle
+}
+
+pub trait EntityData {
+  fn step(&mut self, entity: &mut EntityBase, delta: Time);
+  fn draw(&self, entity: &EntityBase);
+}
+
+struct NullEntityData();
+impl EntityData for NullEntityData {
+  fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
+  fn draw(&self, _entity: &EntityBase) {}
+}
+
+pub struct Entity {
+  pub base: EntityBase,
+  pub data: Box<EntityData>
+}
+
+fn create_entity_data(entity_type: EntityType) -> Box<EntityData> {
+  if entity_type.is_person() {
+    return Box::new(person::PersonData::new());
+  } else if entity_type.is_vehicle() {
+    return Box::new(vehicle::VehicleData::new());
+  }
+
+  Box::new(NullEntityData())
+}
+
+impl Entity {
+  pub fn new(class: ClassId) -> Self {
+    let context = get_context();
+
+    let base = EntityBase {
+      class,
+      entity_type: get_entitytype(context.data.classes[class as usize].entity_type),
+      pos: Vec3f::new2(0., 0.),
+      angle: 0.,
+      prev_pos: Vec3f::new2(0., 0.),
+      prev_angle: 0.,
+      stance: EntityStance::Standing,
+      stance_millis: 0,
+      speed: 0.
+    };
+
+    let data = create_entity_data(base.entity_type);
+
+    Entity {
+      base,
+      data
+    }
+  }
+
+  pub fn get_class(&self) -> &EntityClass {
+    &globals::get_context().data.classes[self.base.class as usize]
+  }
+
   pub fn draw(&self) {
     // TODO: check if hidden
 
-    let entity_typeid = self.entity_type as i32;
-    if entity_typeid >= 1 && entity_typeid <= 7 {
-      return draw_person(self);
-    } else if entity_typeid >= 8 && entity_typeid <= 11 {
-      return draw_vehicle(self);
-    }
+    self.data.draw(&self.base);
   }
 
   pub fn step(&mut self, delta: Time) {
     // TODO: check if hidden
 
-    self.stance_millis += delta;
+    self.base.stance_millis += delta;
 
-    match self.entity_type {
+    /*match self.base.entity_type {
       EntityType::Type1 => {
         step_person(self);
       },
@@ -175,32 +237,22 @@ impl Entity {
         // TODO
         step_sidewalk_path(self, delta);
       },
+      EntityType::MovingVehicle => {
+        self.vehicle_data.step(self, delta);
+      }
       _ => {}
-    }
+  }*/
+    self.data.step(&mut self.base, delta);
   }
 }
 
 
-fn update_prev(entity: &mut Entity) {
-  entity.prev_pos = entity.pos;
-  entity.prev_angle = entity.angle;
-}
-
-fn set_new_stance(entity: &mut Entity, newstance: EntityStance) {
-  if entity.stance == newstance {
-    return;
-  }
-
-  entity.stance = newstance;
-  entity.stance_millis = 0;
-}
-
-fn step_person(entity: &mut Entity) -> bool {
+/*fn step_person(entity: &mut EntityBase) -> bool {
   if entity.stance == EntityStance::Dead {
     return true;
   }
 
-  update_prev(entity);
+  entity.update_prev();
 
   match entity.stance {
     EntityStance::Punching => {
@@ -211,12 +263,12 @@ fn step_person(entity: &mut Entity) -> bool {
     },
     EntityStance::Aiming => {
       if entity.stance_millis > 1000 {
-        set_new_stance(entity, EntityStance::Standing)
+        entity.set_new_stance(EntityStance::Standing)
       }
     },
     EntityStance::LyingDown => {
       if entity.stance_millis > 3000 {
-        set_new_stance(entity, EntityStance::Standing)
+        entity.set_new_stance(EntityStance::Standing)
       }
 
       return true;
@@ -228,7 +280,7 @@ fn step_person(entity: &mut Entity) -> bool {
   return false;
 }
 
-fn pick_sidewalk_direction(entity: &mut Entity) {
+fn pick_sidewalk_direction(entity: &mut EntityBase) {
   let angle: Angle = util::pick_int(4) as f64 * util::HALF_PI;
   let class = entity.get_class().clone();
   entity.walking_direction.x = class.width * angle.cos();
@@ -236,7 +288,7 @@ fn pick_sidewalk_direction(entity: &mut Entity) {
   entity.walking_angle = angle;
 }
 
-fn move_forward(entity: &mut Entity, delta: Time, speed: FScalar) {
+fn move_forward(entity: &mut EntityBase, delta: Time, speed: FScalar) {
   if speed == 0. {
     return;
   }
@@ -246,7 +298,7 @@ fn move_forward(entity: &mut Entity, delta: Time, speed: FScalar) {
   entity.pos.y += amount * entity.angle.sin();
 }
 
-fn step_sidewalk_path(entity: &mut Entity, delta: Time) -> bool {
+fn step_sidewalk_path(entity: &mut EntityBase, delta: Time) -> bool {
   if step_person(entity) {
     return true;
   }
@@ -262,14 +314,13 @@ fn step_sidewalk_path(entity: &mut Entity, delta: Time) -> bool {
 
       entity.angle = entity.walking_angle;
 
-      let speed = entity.speed;
-      move_forward(entity, delta, speed);
+      entity.move_forward(delta);
 
       if !level::pos_is_sidewalk(&globals::get_game().level, entity.pos + entity.walking_direction) {
         entity.pos.x = entity.prev_pos.x;
         entity.pos.y = entity.prev_pos.y;
         entity.angle = old_angle;
-        set_new_stance(entity, EntityStance::Standing);
+        entity.set_new_stance(EntityStance::Standing);
       }
     },
     _ => {}
@@ -320,3 +371,4 @@ fn draw_vehicle(entity: &Entity) {
 
   sprite::draw_sprite(current_sprite, entity.pos.into(), 0);
 }
+*/

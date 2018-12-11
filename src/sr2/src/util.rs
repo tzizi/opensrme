@@ -4,7 +4,7 @@ use super::*;
 use std::ops::*;
 
 pub const PI: Angle = std::f64::consts::PI;
-pub const QUARTER_PI: Angle = PI / 2.;
+pub const QUARTER_PI: Angle = PI / 4.;
 pub const HALF_PI: Angle = PI / 2.;
 pub const TWO_PI: Angle = PI * 2.;
 pub const NAN: f64 = std::f64::NAN;
@@ -13,13 +13,13 @@ pub mod angles {
   use super::*;
 
   pub const ANGLE_E: Angle = 0.;
-  pub const ANGLE_NE: Angle = QUARTER_PI;
-  pub const ANGLE_N: Angle = HALF_PI;
-  pub const ANGLE_NW: Angle = HALF_PI + QUARTER_PI;
+  pub const ANGLE_SE: Angle = QUARTER_PI;
+  pub const ANGLE_S: Angle = HALF_PI;
+  pub const ANGLE_SW: Angle = HALF_PI + QUARTER_PI;
   pub const ANGLE_W: Angle = PI;
-  pub const ANGLE_SW: Angle = PI + QUARTER_PI;
-  pub const ANGLE_S: Angle = PI + HALF_PI;
-  pub const ANGLE_SE: Angle = PI + HALF_PI + QUARTER_PI;
+  pub const ANGLE_NW: Angle = PI + QUARTER_PI;
+  pub const ANGLE_N: Angle = PI + HALF_PI;
+  pub const ANGLE_NE: Angle = PI + HALF_PI + QUARTER_PI;
 }
 
 

@@ -12,20 +12,20 @@ pub enum TrafficLight {
 
 impl TrafficLight {
   fn index(&self) -> usize {
-    match self {
-      H_GREEN  => 0,
-      H_YELLOW => 0,
-      V_GREEN  => 1,
-      V_YELLOW => 1
+    match *self {
+      TrafficLight::H_GREEN  => 0,
+      TrafficLight::H_YELLOW => 0,
+      TrafficLight::V_GREEN  => 1,
+      TrafficLight::V_YELLOW => 1
     }
   }
 
   fn is_green(&self) -> bool {
-    match self {
-      H_GREEN  => true,
-      H_YELLOW => false,
-      V_GREEN  => true,
-      V_YELLOW => false
+    match *self {
+      TrafficLight::H_GREEN  => true,
+      TrafficLight::H_YELLOW => false,
+      TrafficLight::V_GREEN  => true,
+      TrafficLight::V_YELLOW => false
     }
   }
 }
@@ -43,6 +43,17 @@ impl VehicleState {
   }
 
   pub fn step(&mut self) {
+    let context = globals::get_context();
+
+    let state_number = (context.time / 3000) % 4;
+    self.trafficlight = match state_number {
+      0 => TrafficLight::H_GREEN,
+      1 => TrafficLight::H_YELLOW,
+      2 => TrafficLight::V_GREEN,
+      3 => TrafficLight::V_YELLOW,
+
+      _ => TrafficLight::H_GREEN // shouldn't happen
+    };
   }
 }
 
@@ -245,7 +256,7 @@ fn move_to_middle_of_road(entity: &EntityBase, delta: Time) -> Vec3f {
     let diff_len = diff.len2();
     util::interpolate_vec(entity.pos, road_middle, 0., diff_len, util::fmin(diff_len, 10. * (delta as FScalar / 1000.)))
   } else {
-    Vec3f::default()
+    entity.pos
   }
 }
 

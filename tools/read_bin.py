@@ -431,7 +431,7 @@ def read_weapons():
             #  3 = assault rifle
             #  4 = special/heavy (sniper, rpg)
             read_int(),
-            # 2:
+            # 2: damage
             read_short(),
             # 3: animation time?
             read_short(),

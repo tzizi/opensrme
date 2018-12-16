@@ -41,8 +41,8 @@ fn read_levelentity<T: DataInputStream>(file: &mut T) -> io::Result<LevelEntity>
   let unk1 = file.read_short()?;
   let route_id = file.read_byte()?;
 
-  println!("Class: {}\n  X: {}, Y: {}\n  Unk1: {}, Route: {}\n",
-             entity_class_id, posx, posy, unk1, route_id);
+  /*println!("Class: {}\n  X: {}, Y: {}\n  Unk1: {}, Route: {}\n",
+             entity_class_id, posx, posy, unk1, route_id);*/
 
   Ok(LevelEntity {
     class: entity_class_id as ClassId,

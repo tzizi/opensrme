@@ -253,7 +253,7 @@ pub enum WeaponType {
 pub struct Weapon {
   pub item: ItemId, // 0
   pub weapon_type: WeaponType, // 1
-  pub unk1: i16, // 2
+  pub damage: i16, // 2
   pub cooldown: i16, // 3
   pub bullet_area: FScalar, // 4
   pub item_increment: i8, // 5

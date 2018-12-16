@@ -1,6 +1,8 @@
 extern crate opensrme_common;
 extern crate encoding;
 extern crate rand;
+extern crate byteorder;
+extern crate crc;
 
 mod types;
 use types::*;
@@ -17,6 +19,7 @@ mod entity;
 mod route;
 mod util;
 mod input;
+mod image;
 mod screen;
 use screen::Screen;
 
@@ -45,14 +48,6 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
   println!("{:?}", datacontext.levels);
 
   let mut images = vec![];
-  for i in datacontext.images.iter() {
-    println!("{}", i);
-    images.push(PaletteImage {
-      filename: i.clone(),
-      image: platform.load_image_from_filename(&(*archive), &i[..])
-    });
-  }
-
   //println!("{:?}", datacontext);
 
   /*for i in datacontext.effects.iter() {
@@ -73,7 +68,7 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
     }
   }
 
-  let mut context = Context {
+  let context = Context {
     running: true,
     archive: archive,
     platform: Box::new(platform),
@@ -89,6 +84,14 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
 
   set_context(context);
   let mut context = get_context();
+
+  for i in context.data.images.iter() {
+    println!("{}", i);
+    context.images.push(PaletteImage {
+      filename: i.clone(),
+      image: image::new_with_path_palette(&i[..], &context.data.palettes[1])//platform.load_image_from_filename(&(*archive), &i[..])
+    });
+  }
 
   let mut game = screen::GameScreen::new(0);
   game.init();

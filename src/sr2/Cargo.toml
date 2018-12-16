@@ -7,6 +7,8 @@ authors = ["tzizi"]
 "opensrme_common" = { path = "../common" }
 encoding = "0.2"
 rand = "*"
+byteorder = "1"
+crc = "^1.0.0"
 
 [lib]
 name = "opensrme_sr2"

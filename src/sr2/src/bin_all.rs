@@ -492,7 +492,7 @@ fn read_weapons<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Weapon>> {
       _ => WeaponType::Unknown
     };
 
-    let unk1 = file.read_short()?;
+    let damage = file.read_short()?;
     let cooldown = file.read_short()?;
     let bullet_area = (file.readInt()? as FScalar) / 65536.0;
     let item_increment = file.read_byte()?;
@@ -501,7 +501,7 @@ fn read_weapons<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Weapon>> {
     weapons.push(Weapon {
       item,
       weapon_type,
-      unk1,
+      damage,
       cooldown,
       bullet_area,
       item_increment,

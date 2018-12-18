@@ -47,7 +47,17 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
   let datacontext = read_bin_all(&(*archive)).unwrap();
   println!("{:?}", datacontext.levels);
 
-  let mut images = vec![];
+  //let mut images = vec![];
+  let mut palette_images = vec![];
+
+  for i in 0..datacontext.palettes.len() {
+    let mut images = vec![];
+    for j in 0..datacontext.images.len() {
+      images.push(0 as PlatformId);
+    }
+
+    palette_images.push(images);
+  }
   //println!("{:?}", datacontext);
 
   /*for i in datacontext.effects.iter() {
@@ -75,7 +85,7 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
     time: instant_get_millis(),
     delta: 0,
     data: datacontext,
-    images,
+    palette_images,
     levels: std::collections::HashMap::new(),
     game: std::ptr::null_mut(),
     screen: None,
@@ -85,12 +95,17 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
   set_context(context);
   let mut context = get_context();
 
-  for i in context.data.images.iter() {
+  /*for i in context.data.images.iter() {
     println!("{}", i);
     context.images.push(PaletteImage {
       filename: i.clone(),
       image: image::new_with_path_palette(&i[..], &context.data.palettes[1])//platform.load_image_from_filename(&(*archive), &i[..])
     });
+}*/
+
+  for i in 0..context.data.images.len() {
+    println!("Loading image #{}", i);
+    image::load_image(i as ImageId, 0);
   }
 
   let mut game = screen::GameScreen::new(0);

@@ -105,7 +105,7 @@ pub fn calc_aabb(sprite: &Sprite, pos: Vec3i, flip: Flip) -> [i16; 4] {
   [x, y, x + width, y + height]
 }
 
-pub fn draw_sprite(spriteid: SpriteId, pos: Vec3i, flip: Flip) {
+pub fn draw_sprite_palette(spriteid: SpriteId, pos: Vec3i, flip: Flip, palette: PaletteId) {
   let mut context = get_context();
 
   let sprite = &context.data.sprites[spriteid as usize];
@@ -127,7 +127,7 @@ pub fn draw_sprite(spriteid: SpriteId, pos: Vec3i, flip: Flip) {
       } => {
         //println!("{:?}", context.images[image_id as usize]);
         context.platform.draw_region(
-          &context.images[image_id as usize].image,
+          &context.palette_images[palette as usize][image_id as usize],
           start_x as IScalar,
           start_y as IScalar,
           (aabb[2] - aabb[0]) as IScalar,
@@ -163,7 +163,7 @@ pub fn draw_sprite(spriteid: SpriteId, pos: Vec3i, flip: Flip) {
           if new_spriteid as SpriteId == spriteid as SpriteId {
             println!("Same sprite id: {}", spriteid);
           } else {
-            draw_sprite(new_spriteid as SpriteId, Vec3i::new2(pos.x + startx as i32, pos.y + starty as i32), flip);
+            draw_sprite_palette(new_spriteid as SpriteId, Vec3i::new2(pos.x + startx as i32, pos.y + starty as i32), flip, palette);
           }
         }
       },
@@ -206,4 +206,8 @@ pub fn draw_sprite(spriteid: SpriteId, pos: Vec3i, flip: Flip) {
       }
     }
   }
+}
+
+pub fn draw_sprite(spriteid: SpriteId, pos: Vec3i, flip: Flip) {
+  draw_sprite_palette(spriteid, pos, flip, 0)
 }

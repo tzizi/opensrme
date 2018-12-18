@@ -1,6 +1,6 @@
 use super::*;
 use byteorder::{BigEndian, ByteOrder};
-use crc::{crc32, Hasher32};
+use crc::crc32;
 
 pub fn new(path: &str) -> PlatformId {
   let context = globals::get_context();
@@ -95,4 +95,19 @@ pub fn new_with_path_palette(path: &str, palette: &Palette) -> PlatformId {
   }
 
   0
+}
+
+pub fn load_image(image: ImageId, palette: PaletteId) -> PlatformId {
+  let context = globals::get_context();
+
+  let filename = &context.data.images[image as usize][..];
+  let platform_id =
+    match palette {
+      0 => new(filename),
+      _ => new_with_path_palette(filename, &context.data.palettes[palette as usize])
+    };
+
+  context.palette_images[palette as usize][image as usize] = platform_id;
+
+  platform_id
 }

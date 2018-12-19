@@ -45,6 +45,14 @@ pub struct Image {
 
 pub type Angle = f64;
 
+pub trait VecTrait<T> {
+  fn min2(&self) -> T;
+  fn max2(&self) -> T;
+  fn max3(&self) -> T;
+  fn min3(&self) -> T;
+  fn abs(&self) -> Self;
+}
+
 #[derive(Debug, PartialEq, Copy, Clone, Default)]
 pub struct Vec3<T> {
   pub x: T,
@@ -100,6 +108,58 @@ impl From<Vec3f> for Vec3i {
       x: other.x as IScalar,
       y: other.y as IScalar,
       z: other.z as IScalar
+    }
+  }
+}
+
+impl<T: PartialOrd+Copy+Sub<Output=T>+Neg<Output=T>> VecTrait<T> for Vec3<T> {
+  fn max2(&self) -> T {
+    if self.x > self.y {
+      self.x
+    } else {
+      self.y
+    }
+  }
+
+  fn min2(&self) -> T {
+    if self.x < self.y {
+      self.x
+    } else {
+      self.y
+    }
+  }
+
+  fn max3(&self) -> T {
+    let temp = self.max2();
+
+    if temp > self.z {
+      temp
+    } else {
+      self.z
+    }
+  }
+
+  fn min3(&self) -> T {
+    let temp = self.min2();
+
+    if temp < self.z {
+      temp
+    } else {
+      self.z
+    }
+  }
+
+  fn abs(&self) -> Self {
+    let zero = self.x - self.x;
+
+    let x: T = if self.x < zero { -self.x } else { self.x };
+    let y: T = if self.y < zero { -self.y } else { self.y };
+    let z: T = if self.z < zero { -self.z } else { self.z };
+
+    Vec3::<T> {
+      x,
+      y,
+      z
     }
   }
 }

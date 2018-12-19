@@ -100,6 +100,11 @@ pub fn new_with_path_palette(path: &str, palette: &Palette) -> PlatformId {
 pub fn load_image(image: ImageId, palette: PaletteId) -> PlatformId {
   let context = globals::get_context();
 
+  let mut palette = palette;
+  if palette == -1 {
+    palette = 0;
+  }
+
   let filename = &context.data.images[image as usize][..];
   let platform_id =
     match palette {

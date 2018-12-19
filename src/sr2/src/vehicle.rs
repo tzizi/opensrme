@@ -346,10 +346,10 @@ impl EntityData for VehicleData {
     let class = entity.get_class();
 
     let clip = &context.data.clips[class.clip as usize];
-    // TODO: palettes
     let clip_angle = &clip[util::get_angle_in_clip(entity.angle, clip.len())];
     let current_sprite = clip_angle[0];
 
-    sprite::draw_sprite(current_sprite, entity.pos.into(), 0);
+    // TODO: fix palettes so that only certain sprites are used for palettes, not every sprite (tire animations don't work)
+    sprite::draw_sprite_palette(current_sprite, entity.pos.into(), 0, 2);
   }
 }

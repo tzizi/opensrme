@@ -12,6 +12,7 @@ pub type SoundId = Id;
 pub type ImageId = Id;
 pub type PaletteId = Id;
 pub type LevelId = Id;
+pub type EntityId = Id;
 
 pub type LevelTileData = i8;
 

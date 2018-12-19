@@ -53,6 +53,17 @@ impl EntityType {
   pub fn is_vehicle(&self) -> bool {
     ((*self as i32) >= 8 && (*self as i32) <= 12) || (*self as i32) == 20
   }
+
+  pub fn is_npc(&self) -> bool {
+    return
+      *self == EntityType::Pedestrian ||
+      *self == EntityType::VehiclePedestrian ||
+      *self == EntityType::Gangster ||
+      *self == EntityType::Police ||
+      *self == EntityType::MovingVehicle ||
+      *self == EntityType::EnemyVehicle ||
+      *self == EntityType::PoliceCar;
+  }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]

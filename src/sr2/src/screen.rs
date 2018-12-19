@@ -9,6 +9,7 @@ pub trait Screen {
 //#[derive(Debug, Clone, PartialEq)]
 pub struct GameScreen {
   pub level: Level,
+  pub levelid: LevelId,
   pub entities: Vec<entity::Entity>,
   pub main_camera_pos: Vec3i,
   pub camera: Camera,
@@ -23,6 +24,7 @@ impl GameScreen {
 
     let mut game = GameScreen {
       level: level::get_level_from_levelid(levelid),
+      levelid,
       entities: vec![],
       main_camera_pos: Vec3i::default(),
       camera: Camera::default(),
@@ -149,32 +151,18 @@ impl GameScreen {
   fn step_entity_spawn(&mut self) {
     loop {
       let mut entity_found = true;
-      let entities_len = self.entities.len();
+
+      let entities_len = self.entities.len(); // because of borrow
       let entity = &mut self.entities[self.entity_spawn_counter % entities_len];
-      // todo: check for flag 0x10000 == 0
-      match entity.base.entity_type {
-        entity::EntityType::Player => {},
-        entity::EntityType::Pedestrian => {
-          if (entity.base.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
-            (entity.base.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
-              GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
-            }
-        },
-        entity::EntityType::Gangster => {
-          if (entity.base.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
-            (entity.base.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
-              GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
-            }
-        },
-        entity::EntityType::MovingVehicle => {
-          if (entity.base.pos.x as IScalar - self.camera.middle().x).abs() > 320 ||
-            (entity.base.pos.y as IScalar - self.camera.middle().y).abs() > 320 {
-              GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
-            }
-        },
-        _ => {
-          entity_found = false;
+
+      // TODO: check for flag 0x10000 == 0
+      if entity.base.entity_type.is_npc() {
+        let pos: Vec3i = entity.base.pos.into();
+        if (pos - self.camera.middle()).abs().min2() > self.camera.size.max2() {
+          GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
         }
+      } else if entity.base.entity_type != entity::EntityType::Player {
+        entity_found = false;
       }
 
       self.entity_spawn_counter += 1;
@@ -187,6 +175,22 @@ impl GameScreen {
 
 impl Screen for GameScreen {
   fn init(&mut self) {
+    level::load_images(self.levelid);
+    image::load_image(6, 12);
+    image::load_image(6, 13);
+    image::load_image(8, 12);
+    for i in 1..4 {
+      image::load_image(18, i);
+    }
+    for i in 1..4 {
+      image::load_image(5, i);
+    }
+    for i in 1..4 {
+      image::load_image(7, i);
+    }
+    for i in 1..4 {
+      image::load_image(13, i);
+    }
     self.entities = level::load_entities(&self.level);
   }
 

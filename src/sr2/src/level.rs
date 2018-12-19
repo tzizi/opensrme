@@ -164,6 +164,14 @@ pub fn get_level_from_levelid(levelid: LevelId) -> Level {
   }
 }
 
+pub fn load_images(levelid: LevelId) {
+  let context = globals::get_context();
+
+  for image in context.data.levels[levelid as usize].images.iter() {
+    image::load_image(image.image, image.palette);
+  }
+}
+
 pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
   let mut context = globals::get_context();
 

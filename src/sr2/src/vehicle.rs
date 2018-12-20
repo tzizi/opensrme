@@ -325,10 +325,24 @@ impl VehicleData {
     // TODO: calculate skidmarks
   }
 
-
+  fn init_simple_car(&mut self, entity: &mut EntityBase) {
+    entity.palette = util::pick_int(2) + 1;
+  }
 }
 
 impl EntityData for VehicleData {
+  fn init(&mut self, entity: &mut EntityBase) {
+    if
+      entity.entity_type == EntityType::Type8 ||
+      entity.entity_type == EntityType::MovingVehicle {
+        self.init_simple_car(entity);
+      }
+
+    if entity.entity_type == EntityType::MovingVehicle {
+      entity.hidden = true;
+    }
+  }
+
   fn step(&mut self, entity: &mut EntityBase, delta: Time) {
     self.step_drive_along_road(entity, delta);
   }
@@ -349,8 +363,8 @@ impl EntityData for VehicleData {
     let clip_angle = &clip[util::get_angle_in_clip(entity.angle, clip.len())];
     let current_sprite = clip_angle[0];
 
-    // TODO: fix palettes so that only certain sprites are used for palettes, not every sprite (tire animations don't work)
-    sprite::draw_sprite_palette(current_sprite, entity.pos.into(), 0, 2);
+    let imageid = sprite::get_image_from_sprite(current_sprite).unwrap();
+    sprite::draw_sprite_palette(current_sprite, entity.pos.into(), 0, &vec![(imageid, entity.palette)]);
   }
 
   fn can_spawn_at(&self, level: &Level, pos: Vec3f) -> bool {

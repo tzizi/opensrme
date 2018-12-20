@@ -126,11 +126,12 @@ pub struct EntityBase {
   pub angle: Angle,
   pub prev_pos: Vec3f,
   pub prev_angle: Angle,
+  pub speed: FScalar,
 
   pub stance: EntityStance,
   pub stance_millis: Time,
 
-  pub speed: FScalar,
+  pub palette: PaletteId,
 
   pub hidden: bool // 0x01
 }
@@ -172,6 +173,7 @@ pub struct PersonData {
 }
 
 pub trait EntityData {
+  fn init(&mut self, _entity: &mut EntityBase) {}
   fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
   fn draw(&self, _entity: &EntityBase) {}
   fn despawn_action(&mut self, _entity: &mut EntityBase) -> bool { true }
@@ -200,7 +202,7 @@ impl Entity {
   pub fn new(class: ClassId) -> Self {
     let context = get_context();
 
-    let base = EntityBase {
+    let mut base = EntityBase {
       class,
       entity_type: get_entitytype(context.data.classes[class as usize].entity_type),
       pos: Vec3f::new2(0., 0.),
@@ -209,11 +211,13 @@ impl Entity {
       prev_angle: 0.,
       stance: EntityStance::Standing,
       stance_millis: 0,
+      palette: 0,
       speed: 0.,
       hidden: false
     };
 
-    let data = create_entity_data(base.entity_type);
+    let mut data = create_entity_data(base.entity_type);
+    data.init(&mut base);
 
     Entity {
       base,

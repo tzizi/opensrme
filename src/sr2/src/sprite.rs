@@ -1,6 +1,5 @@
 use opensrme_common::*;
-use super::globals::*;
-use super::types::*;
+use super::*;
 
 fn read_drawcommand(info: &Vec<i16>, pos: usize) -> (usize, DrawCommand) {
   return match info[pos] & 0xff {
@@ -105,8 +104,8 @@ pub fn calc_aabb(sprite: &Sprite, pos: Vec3i, flip: Flip) -> [i16; 4] {
   [x, y, x + width, y + height]
 }
 
-pub fn draw_sprite_palette(spriteid: SpriteId, pos: Vec3i, flip: Flip, palette: PaletteId) {
-  let mut context = get_context();
+pub fn draw_sprite_palette(spriteid: SpriteId, pos: Vec3i, flip: Flip, palette_map: &Vec<(ImageId, PaletteId)>) {
+  let mut context = globals::get_context();
 
   let sprite = &context.data.sprites[spriteid as usize];
   let aabb = calc_aabb(&sprite, pos, flip);
@@ -126,6 +125,13 @@ pub fn draw_sprite_palette(spriteid: SpriteId, pos: Vec3i, flip: Flip, palette: 
         start_y
       } => {
         //println!("{:?}", context.images[image_id as usize]);
+        let mut palette: PaletteId = 0;
+        for item in palette_map.iter() {
+          if item.0 == image_id as ImageId {
+            palette = item.1;
+          }
+        }
+
         context.platform.draw_region(
           &context.palette_images[palette as usize][image_id as usize],
           start_x as IScalar,
@@ -163,7 +169,7 @@ pub fn draw_sprite_palette(spriteid: SpriteId, pos: Vec3i, flip: Flip, palette: 
           if new_spriteid as SpriteId == spriteid as SpriteId {
             println!("Same sprite id: {}", spriteid);
           } else {
-            draw_sprite_palette(new_spriteid as SpriteId, Vec3i::new2(pos.x + startx as i32, pos.y + starty as i32), flip, palette);
+            draw_sprite_palette(new_spriteid as SpriteId, Vec3i::new2(pos.x + startx as i32, pos.y + starty as i32), flip, palette_map);
           }
         }
       },
@@ -209,5 +215,22 @@ pub fn draw_sprite_palette(spriteid: SpriteId, pos: Vec3i, flip: Flip, palette: 
 }
 
 pub fn draw_sprite(spriteid: SpriteId, pos: Vec3i, flip: Flip) {
-  draw_sprite_palette(spriteid, pos, flip, 0)
+  draw_sprite_palette(spriteid, pos, flip, &vec![])
+}
+
+pub fn get_image_from_sprite(spriteid: SpriteId) -> Option<ImageId> {
+  let mut context = globals::get_context();
+
+  let sprite = &context.data.sprites[spriteid as usize];
+
+  for command in sprite.draw.iter() {
+    match *command {
+      DrawCommand::Image { image_id, .. } => return Some(image_id.into()),
+      DrawCommand::DrawSprite(new_spriteid) => return get_image_from_sprite(new_spriteid),
+      // FIXME: this doesn't match the original algorithm
+      _ => {}
+    }
+  }
+
+  None
 }

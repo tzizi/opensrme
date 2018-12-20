@@ -89,7 +89,7 @@ impl GameScreen {
     Some(Vec3::new2(x, y))
   }
 
-  fn find_entity_spawn_point(level: &Level, entity: &entity::Entity,
+  fn find_entity_spawn_point(level: &Level, entity: &mut entity::Entity,
                              x: IScalar, y: IScalar, border: IScalar) -> Option<Vec3f> {
     // TODO: do proper checks
     let x = x / level.tilesize.x as IScalar;
@@ -108,7 +108,7 @@ impl GameScreen {
           spawn_xy.y < level.tiledata_size.y {
             let pos = Vec3f::from(spawn_xy) * level.tilesize + level.tilesize / 2.;
 
-            if let Some(pos) = entity.can_spawn_at(pos) {
+            if let Some(pos) = entity.spawn(pos) {
               return Some(pos);
             }
           }
@@ -124,15 +124,14 @@ impl GameScreen {
 
   fn apply_entity_spawn_point(level: &Level, entity: &mut entity::Entity, pos: Vec3i, border: IScalar) -> bool {
     let pos = GameScreen::find_entity_spawn_point(level, entity, pos.x, pos.y, border);
-    if let Some(pos) = pos {
+    return pos.is_some();
+    /*if let Some(pos) = pos {
       entity.base.pos = pos;
       entity.spawn();
-
-      entity.base.hidden = false;
       true
     } else {
       false
-    }
+    }*/
   }
 
   fn step_entity_despawn(&mut self) {

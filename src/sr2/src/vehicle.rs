@@ -260,6 +260,19 @@ fn move_to_middle_of_road(entity: &EntityBase, delta: Time) -> Vec3f {
   }
 }
 
+fn get_road_spawn(pos: Vec3f) -> Option<Vec3f> {
+  let game = globals::get_game();
+  let tiledata = level::get_tiledata_for_pos(&game.level, pos);
+
+  if tiledata >= 10 && tiledata <= 13 {
+    if game.entity_spawn_counter % 4 == tiledata as usize - 10 {
+      return get_road_middle(pos);
+    }
+  }
+
+  None
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct VehicleData {
   last_tiledata: LevelTileData,
@@ -343,14 +356,25 @@ impl EntityData for VehicleData {
     }
   }
 
-  fn spawn(&mut self, entity: &mut EntityBase) {
+  fn spawn(&mut self, entity: &mut EntityBase, pos: Vec3f) -> Option<Vec3f> {
+    if let Some(pos) = get_road_spawn(pos) {
+      entity.pos = pos;
+    } else {
+      return None;
+    }
+
     self.init(entity);
 
     let game = globals::get_game();
     let tiledata = level::get_tiledata_for_pos(&game.level, entity.pos);
+
     if let Some(direction) = get_road_direction(tiledata, game.vehicle_state.trafficlight) {
       entity.angle = direction;
     }
+
+    entity.hidden = false;
+
+    Some(entity.pos)
   }
 
   fn step(&mut self, entity: &mut EntityBase, delta: Time) {
@@ -364,8 +388,6 @@ impl EntityData for VehicleData {
     }
 
     // TODO: if broken (flags 0x2) then draw broken car
-    // TODO: animate
-
     let context = globals::get_context();
     let class = entity.get_class();
 
@@ -375,18 +397,5 @@ impl EntityData for VehicleData {
 
     let imageid = sprite::get_image_from_sprite(current_sprite).unwrap();
     sprite::draw_sprite_palette(current_sprite, entity.pos.into(), 0, &vec![(imageid, entity.palette)]);
-  }
-
-  fn can_spawn_at(&self, level: &Level, pos: Vec3f) -> Option<Vec3f> {
-    let game = globals::get_game();
-    let tiledata = level::get_tiledata_for_pos(level, pos);
-
-    if tiledata >= 10 && tiledata <= 13 {
-      if game.entity_spawn_counter % 4 == tiledata as usize - 10 {
-        return get_road_middle(pos);
-      }
-    }
-
-    None
   }
 }

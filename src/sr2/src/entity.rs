@@ -174,11 +174,10 @@ pub struct PersonData {
 
 pub trait EntityData {
   fn init(&mut self, _entity: &mut EntityBase) {}
-  fn spawn(&mut self, entity: &mut EntityBase) { self.init(entity) }
+  fn spawn(&mut self, entity: &mut EntityBase, pos: Vec3f) -> Option<Vec3f> { None }
   fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
   fn draw(&self, _entity: &EntityBase) {}
   fn despawn_action(&mut self, _entity: &mut EntityBase) -> bool { true }
-  fn can_spawn_at(&self, _level: &Level, _pos: Vec3f) -> Option<Vec3f> { None }
 }
 
 struct NullEntityData();
@@ -229,8 +228,13 @@ impl Entity {
     entity
   }
 
-  pub fn spawn(&mut self) {
-    self.data.spawn(&mut self.base);
+  pub fn spawn(&mut self, pos: Vec3f) -> Option<Vec3f> {
+    if let Some(pos) = self.data.spawn(&mut self.base, pos) {
+      self.base.pos = pos;
+      Some(pos)
+    } else {
+      None
+    }
   }
 
   pub fn get_class(&self) -> &EntityClass {
@@ -257,11 +261,5 @@ impl Entity {
 
   pub fn despawn(&mut self) -> bool {
     self.data.despawn_action(&mut self.base)
-  }
-
-  pub fn can_spawn_at(&self, pos: Vec3f) -> Option<Vec3f> {
-    let level = &globals::get_game().level;
-
-    self.data.can_spawn_at(level, pos)
   }
 }

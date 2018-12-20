@@ -20,7 +20,7 @@ pub enum EntityType {
   // 8, vehicle
   Type8 = 8,
   // 9
-  DrivenVehicle = 9,
+  PlayerVehicle = 9,
   // 10
   MovingVehicle = 10,
   // 11
@@ -102,7 +102,7 @@ pub fn get_entitytype(number: i32) -> EntityType {
     6 => EntityType::Police,
     7 => EntityType::Type7,
     8 => EntityType::Type8,
-    9 => EntityType::DrivenVehicle,
+    9 => EntityType::PlayerVehicle,
     10 => EntityType::MovingVehicle,
     11 => EntityType::EnemyVehicle,
     12 => EntityType::PoliceCar,
@@ -130,7 +130,9 @@ pub struct EntityBase {
   pub stance: EntityStance,
   pub stance_millis: Time,
 
-  pub speed: FScalar
+  pub speed: FScalar,
+
+  pub hidden: bool // 0x01
 }
 
 impl EntityBase {
@@ -170,15 +172,14 @@ pub struct PersonData {
 }
 
 pub trait EntityData {
-  fn step(&mut self, entity: &mut EntityBase, delta: Time);
-  fn draw(&self, entity: &EntityBase);
+  fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
+  fn draw(&self, _entity: &EntityBase) {}
+  fn despawn_action(&mut self, _entity: &mut EntityBase) -> bool { true }
+  fn can_spawn_at(&self, _level: &Level, _pos: Vec3f) -> bool { false }
 }
 
 struct NullEntityData();
-impl EntityData for NullEntityData {
-  fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
-  fn draw(&self, _entity: &EntityBase) {}
-}
+impl EntityData for NullEntityData {}
 
 pub struct Entity {
   pub base: EntityBase,
@@ -208,7 +209,8 @@ impl Entity {
       prev_angle: 0.,
       stance: EntityStance::Standing,
       stance_millis: 0,
-      speed: 0.
+      speed: 0.,
+      hidden: false
     };
 
     let data = create_entity_data(base.entity_type);
@@ -224,36 +226,32 @@ impl Entity {
   }
 
   pub fn draw(&self) {
-    // TODO: check if hidden
+    if self.base.hidden {
+      return;
+    }
 
     self.data.draw(&self.base);
   }
 
   pub fn step(&mut self, delta: Time) {
-    // TODO: check if hidden
+    if self.base.hidden {
+      return;
+    }
 
     self.base.stance_millis += delta;
 
-    /*match self.base.entity_type {
-      EntityType::Type1 => {
-        step_person(self);
-      },
-      EntityType::Pedestrian => {
-        step_sidewalk_path(self, delta);
-      },
-      EntityType::VehiclePedestrian => {
-        step_sidewalk_path(self, delta);
-      },
-      EntityType::Gangster => {
-        // TODO
-        step_sidewalk_path(self, delta);
-      },
-      EntityType::MovingVehicle => {
-        self.vehicle_data.step(self, delta);
-      }
-      _ => {}
-  }*/
     self.data.step(&mut self.base, delta);
+  }
+
+  pub fn despawn(&mut self) -> bool {
+    self.data.despawn_action(&mut self.base)
+  }
+
+  pub fn can_spawn_at(&self, pos: Vec3f) -> bool {
+    //self.data.despawn_action(&mut self.base)
+    let level = &globals::get_game().level;
+
+    self.data.can_spawn_at(level, pos)
   }
 }
 

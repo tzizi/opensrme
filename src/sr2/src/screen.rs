@@ -89,7 +89,7 @@ impl GameScreen {
     Some(Vec3::new2(x, y))
   }
 
-  fn can_spawn_at(level: &Level, entity_type: entity::EntityType, pos: Vec3f) -> bool {
+  /*fn can_spawn_at(level: &Level, entity_type: entity::EntityType, pos: Vec3f) -> bool {
     if entity_type.is_person() {
       level::pos_is_sidewalk(level, pos)
     } else if entity_type.is_vehicle() {
@@ -103,9 +103,9 @@ impl GameScreen {
     } else {
       false
     }
-  }
+  }*/
 
-  fn find_entity_spawn_point(level: &Level, entity_type: entity::EntityType,
+  fn find_entity_spawn_point(level: &Level, entity: &entity::Entity,//entity_type: entity::EntityType,
                              x: IScalar, y: IScalar, border: IScalar) -> Option<Vec3f> {
     // TODO: do proper checks
     let x = x / level.tilesize.x as IScalar;
@@ -124,7 +124,8 @@ impl GameScreen {
           spawn_xy.y < level.tiledata_size.y {
             let pos = Vec3f::from(spawn_xy) * level.tilesize + level.tilesize / 2.;
 
-            if GameScreen::can_spawn_at(level, entity_type, pos) {
+            //if GameScreen::can_spawn_at(level, entity_type, pos) {
+            if entity.can_spawn_at(pos) {
               return Some(pos);
             }
           }
@@ -139,7 +140,7 @@ impl GameScreen {
   }
 
   fn apply_entity_spawn_point(level: &Level, entity: &mut entity::Entity, pos: Vec3i, border: IScalar) -> bool {
-    let pos = GameScreen::find_entity_spawn_point(level, entity.base.entity_type, pos.x, pos.y, border);
+    let pos = GameScreen::find_entity_spawn_point(level, entity, pos.x, pos.y, border);
     if let Some(pos) = pos {
       entity.base.pos = pos;
       true
@@ -148,7 +149,7 @@ impl GameScreen {
     }
   }
 
-  fn step_entity_spawn(&mut self) {
+  fn step_entity_despawn(&mut self) {
     loop {
       let mut entity_found = true;
 
@@ -157,9 +158,10 @@ impl GameScreen {
 
       // TODO: check for flag 0x10000 == 0
       if entity.base.entity_type.is_npc() {
-        let pos: Vec3i = entity.base.pos.into();
-        if (pos - self.camera.middle()).abs().min2() > self.camera.size.max2() {
-          GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), 240);
+        if self.camera.out_of_screen(entity.base.pos.into()) {
+          if entity.despawn() {
+            GameScreen::apply_entity_spawn_point(&self.level, entity, self.camera.middle(), self.camera.size.min2());
+          }
         }
       } else if entity.base.entity_type != entity::EntityType::Player {
         entity_found = false;
@@ -199,7 +201,7 @@ impl Screen for GameScreen {
 
     self.vehicle_state.step();
 
-    self.step_entity_spawn();
+    self.step_entity_despawn();
 
     for entity in self.entities.iter_mut() {
       entity.step(delta);

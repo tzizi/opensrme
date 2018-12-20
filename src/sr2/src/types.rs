@@ -393,4 +393,8 @@ impl Camera {
   pub fn middle(&self) -> Vec3i {
     self.pos + (self.size / 2)
   }
+
+  pub fn out_of_screen(&self, pos: Vec3i) -> bool {
+    (pos - self.middle()).abs().min2() > self.size.max2()
+  }
 }

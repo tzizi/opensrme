@@ -146,4 +146,17 @@ impl EntityData for PersonData {
     // TODO: palettes
     sprite::draw_sprite(current_sprite, entity.pos.into(), 0);
   }
+
+  fn despawn_action(&mut self, entity: &mut EntityBase) -> bool {
+    if entity.entity_type == EntityType::VehiclePedestrian {
+      entity.hidden = true;
+      false
+    } else {
+      true
+    }
+  }
+
+  fn can_spawn_at(&self, level: &Level, pos: Vec3f) -> bool {
+    level::pos_is_sidewalk(level, pos)
+  }
 }

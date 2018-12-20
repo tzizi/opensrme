@@ -177,7 +177,7 @@ pub trait EntityData {
   fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
   fn draw(&self, _entity: &EntityBase) {}
   fn despawn_action(&mut self, _entity: &mut EntityBase) -> bool { true }
-  fn can_spawn_at(&self, _level: &Level, _pos: Vec3f) -> bool { false }
+  fn can_spawn_at(&self, _level: &Level, _pos: Vec3f) -> Option<Vec3f> { None }
 }
 
 struct NullEntityData();
@@ -251,7 +251,7 @@ impl Entity {
     self.data.despawn_action(&mut self.base)
   }
 
-  pub fn can_spawn_at(&self, pos: Vec3f) -> bool {
+  pub fn can_spawn_at(&self, pos: Vec3f) -> Option<Vec3f> {
     let level = &globals::get_game().level;
 
     self.data.can_spawn_at(level, pos)

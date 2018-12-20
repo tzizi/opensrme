@@ -108,7 +108,7 @@ impl GameScreen {
           spawn_xy.y < level.tiledata_size.y {
             let pos = Vec3f::from(spawn_xy) * level.tilesize + level.tilesize / 2.;
 
-            if entity.can_spawn_at(pos) {
+            if let Some(pos) = entity.can_spawn_at(pos) {
               return Some(pos);
             }
           }

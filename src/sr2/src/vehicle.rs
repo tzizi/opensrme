@@ -367,16 +367,16 @@ impl EntityData for VehicleData {
     sprite::draw_sprite_palette(current_sprite, entity.pos.into(), 0, &vec![(imageid, entity.palette)]);
   }
 
-  fn can_spawn_at(&self, level: &Level, pos: Vec3f) -> bool {
+  fn can_spawn_at(&self, level: &Level, pos: Vec3f) -> Option<Vec3f> {
     let game = globals::get_game();
     let tiledata = level::get_tiledata_for_pos(level, pos);
 
     if tiledata >= 10 && tiledata <= 13 {
       if game.entity_spawn_counter % 4 == tiledata as usize - 10 {
-        return true;
+        return get_road_middle(pos);
       }
     }
 
-    false
+    None
   }
 }

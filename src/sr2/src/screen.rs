@@ -89,23 +89,7 @@ impl GameScreen {
     Some(Vec3::new2(x, y))
   }
 
-  /*fn can_spawn_at(level: &Level, entity_type: entity::EntityType, pos: Vec3f) -> bool {
-    if entity_type.is_person() {
-      level::pos_is_sidewalk(level, pos)
-    } else if entity_type.is_vehicle() {
-      let tiledata = level::get_tiledata_for_pos(level, pos);
-      if tiledata >= 10 && tiledata <= 13 {
-        //if game.entity_spawn_counter % 4 != tiledata - 10 { return false; }
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      false
-    }
-  }*/
-
-  fn find_entity_spawn_point(level: &Level, entity: &entity::Entity,//entity_type: entity::EntityType,
+  fn find_entity_spawn_point(level: &Level, entity: &entity::Entity,
                              x: IScalar, y: IScalar, border: IScalar) -> Option<Vec3f> {
     // TODO: do proper checks
     let x = x / level.tilesize.x as IScalar;
@@ -124,7 +108,6 @@ impl GameScreen {
           spawn_xy.y < level.tiledata_size.y {
             let pos = Vec3f::from(spawn_xy) * level.tilesize + level.tilesize / 2.;
 
-            //if GameScreen::can_spawn_at(level, entity_type, pos) {
             if entity.can_spawn_at(pos) {
               return Some(pos);
             }

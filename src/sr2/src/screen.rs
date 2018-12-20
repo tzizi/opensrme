@@ -125,8 +125,10 @@ impl GameScreen {
   fn apply_entity_spawn_point(level: &Level, entity: &mut entity::Entity, pos: Vec3i, border: IScalar) -> bool {
     let pos = GameScreen::find_entity_spawn_point(level, entity, pos.x, pos.y, border);
     if let Some(pos) = pos {
-      entity.base.hidden = false;
       entity.base.pos = pos;
+      entity.spawn();
+
+      entity.base.hidden = false;
       true
     } else {
       false

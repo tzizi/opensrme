@@ -343,6 +343,16 @@ impl EntityData for VehicleData {
     }
   }
 
+  fn spawn(&mut self, entity: &mut EntityBase) {
+    self.init(entity);
+
+    let game = globals::get_game();
+    let tiledata = level::get_tiledata_for_pos(&game.level, entity.pos);
+    if let Some(direction) = get_road_direction(tiledata, game.vehicle_state.trafficlight) {
+      entity.angle = direction;
+    }
+  }
+
   fn step(&mut self, entity: &mut EntityBase, delta: Time) {
     self.step_drive_along_road(entity, delta);
   }

@@ -174,6 +174,7 @@ pub struct PersonData {
 
 pub trait EntityData {
   fn init(&mut self, _entity: &mut EntityBase) {}
+  fn spawn(&mut self, entity: &mut EntityBase) { self.init(entity) }
   fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
   fn draw(&self, _entity: &EntityBase) {}
   fn despawn_action(&mut self, _entity: &mut EntityBase) -> bool { true }
@@ -202,7 +203,7 @@ impl Entity {
   pub fn new(class: ClassId) -> Self {
     let context = get_context();
 
-    let mut base = EntityBase {
+    let base = EntityBase {
       class,
       entity_type: get_entitytype(context.data.classes[class as usize].entity_type),
       pos: Vec3f::new2(0., 0.),
@@ -216,13 +217,20 @@ impl Entity {
       hidden: false
     };
 
-    let mut data = create_entity_data(base.entity_type);
-    data.init(&mut base);
+    let data = create_entity_data(base.entity_type);
 
-    Entity {
+    let mut entity = Entity {
       base,
       data
-    }
+    };
+
+    entity.data.init(&mut entity.base);
+
+    entity
+  }
+
+  pub fn spawn(&mut self) {
+    self.data.spawn(&mut self.base);
   }
 
   pub fn get_class(&self) -> &EntityClass {

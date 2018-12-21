@@ -98,7 +98,30 @@ impl PersonData {
   }
 }
 
+fn get_palette_id(entity_type: EntityType) -> PaletteId {
+  if entity_type == EntityType::Player {
+    11
+  } else if entity_type == EntityType::Police {
+    0
+  } else if (entity_type == EntityType::Type1 ||
+             entity_type == EntityType::Pedestrian ||
+             entity_type == EntityType::VehiclePedestrian ||
+             entity_type == EntityType::Type7) {
+    12 + util::pick_int(1)
+  } else if entity_type == EntityType::Gangster {
+    // TODO
+    0
+  } else {
+    // shouldn't happen
+    0
+  }
+}
+
 impl EntityData for PersonData {
+  fn init(&mut self, entity: &mut EntityBase) {
+    entity.palette = get_palette_id(entity.entity_type);
+  }
+
   fn step(&mut self, entity: &mut EntityBase, delta: Time) {
     match entity.entity_type {
       EntityType::Type1 => {
@@ -138,13 +161,11 @@ impl EntityData for PersonData {
     //println!("{:?} {:?}", class, stance);
 
     let clip = &context.data.clips[(class.clip + stance as i32) as usize];
-    // TODO: get the correct index from the angle
     let clip_angle = &clip[util::get_angle_in_clip(entity.angle, clip.len())];
-    // TODO: animate properly
     let current_sprite = clip_angle[util::get_frame_in_clip(entity.stance_millis, 700, clip_angle.len())];
 
-    // TODO: palettes
-    sprite::draw_sprite(current_sprite, entity.pos.into(), 0);
+    let imageid = sprite::get_image_from_sprite(current_sprite).unwrap();
+    sprite::draw_sprite_palette(current_sprite, entity.pos.into(), 0, &vec![(imageid, entity.palette)]);
   }
 
   fn despawn_action(&mut self, entity: &mut EntityBase) -> bool {

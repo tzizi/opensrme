@@ -338,18 +338,50 @@ impl VehicleData {
     // TODO: calculate skidmarks
   }
 
-  fn init_simple_car(&mut self, entity: &mut EntityBase) {
-    entity.palette = util::pick_int(2) + 1;
+  fn init_simple_vehicle(&mut self, entity: &mut EntityBase) {
+    // motorcycle
+    if entity.class == 38 || entity.class == 39 {
+      entity.gender = EntityBase::pick_gender();
+      entity.palette = EntityBase::pick_npc_person_palette();
+    } else {
+      entity.palette = util::pick_int(2) + 1;
+    }
+  }
+
+  fn draw_basic_vehicle(&self, entity: &EntityBase, palette: PaletteId) {
+    let context = globals::get_context();
+    let class = entity.get_class();
+
+    let clip = &context.data.clips[class.clip as usize];
+    let clip_angle = &clip[util::get_angle_in_clip(entity.angle, clip.len())];
+    let current_sprite = clip_angle[0];
+
+    let imageid = sprite::get_image_from_sprite(current_sprite).unwrap();
+    sprite::draw_sprite_palette(current_sprite, entity.pos.into(), 0, &vec![(imageid, palette)]);
+  }
+
+  fn draw_motorcycle(&self, entity: &EntityBase) {
+    self.draw_basic_vehicle(entity, 0);
+
+    // TODO: change gender if image with palette is loaded?
+    if entity.stance != EntityStance::Standing || true {
+      let context = globals::get_context();
+      let clip = &context.data.clips[entity.gender.get_clip_id() as usize];
+      let clip_angle = &clip[util::get_angle_in_clip(entity.angle, clip.len())];
+      let current_sprite = clip_angle[0];
+
+      let imageid = sprite::get_image_from_sprite(current_sprite).unwrap();
+      sprite::draw_sprite_palette(current_sprite, entity.pos.into(), 0, &vec![(imageid, entity.palette)]);
+    }
   }
 }
 
 impl EntityData for VehicleData {
   fn init(&mut self, entity: &mut EntityBase) {
-    if
-      entity.entity_type == EntityType::Type8 ||
-      entity.entity_type == EntityType::MovingVehicle {
-        self.init_simple_car(entity);
-      }
+    if (entity.entity_type == EntityType::Type8 ||
+        entity.entity_type == EntityType::MovingVehicle) {
+      self.init_simple_vehicle(entity);
+    }
 
     if entity.entity_type == EntityType::MovingVehicle {
       entity.hidden = true;
@@ -383,19 +415,10 @@ impl EntityData for VehicleData {
 
   fn draw(&self, entity: &EntityBase) {
     if entity.class == 38 || entity.class == 39 {
-      // TODO: draw motorcycle
-      return;
+      return self.draw_motorcycle(entity);
     }
 
     // TODO: if broken (flags 0x2) then draw broken car
-    let context = globals::get_context();
-    let class = entity.get_class();
-
-    let clip = &context.data.clips[class.clip as usize];
-    let clip_angle = &clip[util::get_angle_in_clip(entity.angle, clip.len())];
-    let current_sprite = clip_angle[0];
-
-    let imageid = sprite::get_image_from_sprite(current_sprite).unwrap();
-    sprite::draw_sprite_palette(current_sprite, entity.pos.into(), 0, &vec![(imageid, entity.palette)]);
+    self.draw_basic_vehicle(entity, entity.palette);
   }
 }

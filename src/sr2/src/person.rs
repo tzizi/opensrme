@@ -107,7 +107,7 @@ fn get_palette_id(entity_type: EntityType) -> PaletteId {
              entity_type == EntityType::Pedestrian ||
              entity_type == EntityType::VehiclePedestrian ||
              entity_type == EntityType::Type7) {
-    12 + util::pick_int(1)
+    EntityBase::pick_npc_person_palette()
   } else if entity_type == EntityType::Gangster {
     // TODO
     0

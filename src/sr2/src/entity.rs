@@ -118,6 +118,23 @@ pub fn get_entitytype(number: i32) -> EntityType {
   }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum EntityGender {
+  // 0
+  Female = 0,
+  // 1
+  Male = 1
+}
+
+impl EntityGender {
+  pub fn get_clip_id(&self) -> ClipId {
+    match *self {
+      EntityGender::Female => 18,
+      EntityGender::Male   => 8
+    }
+  }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct EntityBase {
   pub class: ClassId,
@@ -132,6 +149,7 @@ pub struct EntityBase {
   pub stance_millis: Time,
 
   pub palette: PaletteId,
+  pub gender: EntityGender,
 
   pub hidden: bool // 0x01
 }
@@ -163,6 +181,17 @@ impl EntityBase {
 
     self.stance = newstance;
     self.stance_millis = 0;
+  }
+
+  pub fn pick_gender() -> EntityGender {
+    match util::pick_int(2) {
+      0 => EntityGender::Male,
+      _ => EntityGender::Female
+    }
+  }
+
+  pub fn pick_npc_person_palette() -> PaletteId {
+    12 + util::pick_int(1)
   }
 }
 
@@ -212,6 +241,7 @@ impl Entity {
       stance: EntityStance::Standing,
       stance_millis: 0,
       palette: 0,
+      gender: EntityGender::Female,
       speed: 0.,
       hidden: false
     };

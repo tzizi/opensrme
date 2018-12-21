@@ -89,7 +89,8 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
     running: true,
     archive: archive,
     platform: Box::new(platform),
-    time: instant_get_millis(),
+    realtime: instant_get_millis(),
+    time: 1,
     delta: 0,
     data: datacontext,
     palette_images,
@@ -130,12 +131,13 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
 
   //let image = context.platform.load_image_from_filename(archive, "Car_Police.png");
 
-  let mut last_second = context.time;
+  let mut last_second = context.realtime;
   let mut fps = 0;
   while context.running {
-    let lasttime = context.time;
-    context.time = instant_get_millis();
-    context.delta = context.time - lasttime;
+    let lasttime = context.realtime;
+    context.realtime = instant_get_millis();
+    context.delta = (context.realtime - lasttime) * 1;
+    context.time += context.delta;
 
     context.input.step();
 
@@ -164,8 +166,8 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
 
     context.platform.swap();
 
-    if context.time - last_second >= 1000 {
-      last_second = context.time;
+    if context.realtime - last_second >= 1000 {
+      last_second = context.realtime;
       //println!("{}", fps);
       context.platform.set_title(&format!("Saints Row 2 ({} FPS)", fps)[..]);
       fps = 0;
@@ -174,7 +176,7 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
     }
 
     let mut sleep = 16;
-    let millis = instant_get_millis() - context.time;
+    let millis = instant_get_millis() - context.realtime;
     if millis < sleep {
       sleep -= millis;
       std::thread::sleep(std::time::Duration::from_millis(sleep));

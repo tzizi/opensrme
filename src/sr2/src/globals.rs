@@ -6,6 +6,7 @@ pub struct Context {
   pub running: bool,
   pub archive: Box<Archive>,
   pub platform: Box<Platform>,
+  pub realtime: Time,
   pub time: Time,
   pub delta: Time,
   pub data: DataContext,

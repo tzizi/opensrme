@@ -185,9 +185,24 @@ pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
   entities
 }
 
+fn level_drawable_aabb(layer: &LevelLayer) -> (Vec3i, Vec3i) {
+  let context = globals::get_context();
+  let size = (context.platform.get_size() / layer.tilesize.x) + 2;
+  let translate = context.platform.get_translation() / layer.tilesize.x;
+
+  let startx = std::cmp::max(0, -translate.x);
+  let starty = std::cmp::max(0, -translate.y);
+  let endx = std::cmp::min(layer.size.x, size.x - translate.x);
+  let endy = std::cmp::min(layer.size.y, size.y - translate.y);
+
+  (Vec3i::new2(startx, starty), Vec3i::new2(endx, endy))
+  //std::cmp::min(level.size.x,
+}
+
 pub fn draw_level_layer(layer: &LevelLayer) {
-  for x in 0..layer.size.x {
-    for y in 0..layer.size.y {
+  let (start, end) = level_drawable_aabb(layer);
+  for x in start.x..end.x {
+    for y in start.y..end.y {
       let tile = layer.tiles[((y * layer.size.x) + x) as usize];
       if tile >= 0 {
         sprite::draw_sprite(tile, Vec3i::new2(layer.start.x + x * layer.tilesize.x, layer.start.y + y * layer.tilesize.y), 0);

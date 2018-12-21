@@ -95,6 +95,14 @@ fn get_event(event: SEvent) -> Option<Event> {
         delta: Vec3i::new2(xrel, yrel)
       }
     },
+    SEvent::Window { win_event, .. }             => {
+      match win_event {
+        sdl2::event::WindowEvent::SizeChanged(x, y) => {
+          Event::Resize(Vec3i::new2(x, y))
+        },
+        _                                           => return None
+      }
+    },
     _                                         => return None
   })
 }
@@ -141,6 +149,15 @@ impl Platform for SDL2Platform {
     }
   }
 
+  fn set_title(&mut self, title: &str) {
+    self.sdl_canvas.window_mut().set_title(title);
+  }
+
+  fn get_size(&self) -> Vec3i {
+    let (x, y) = self.sdl_canvas.window().size();
+    Vec3i::new2(x as IScalar, y as IScalar)
+  }
+
   fn new_image(&mut self, image: Image) -> PlatformId {
     let texture = self.texture_creator.create_texture_static(Some(sdl2::pixels::PixelFormatEnum::ABGR8888),
                                                              image.size.x as u32,
@@ -180,6 +197,10 @@ impl Platform for SDL2Platform {
 
   fn translate(&mut self, pos: Vec3i) {
     self.offset = self.offset + pos;
+  }
+
+  fn get_translation(&mut self) -> Vec3i {
+    self.offset
   }
 
   fn set_color(&mut self, color: Color) {

@@ -48,6 +48,7 @@ pub enum MouseScroll {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Event {
   Quit,
+  Resize(Vec3i),
   Key {
     pressed: bool,
     key: Key
@@ -78,6 +79,8 @@ pub trait Platform {
   fn close_window(&mut self);
   //fn wait_event(&mut self, window: PlatformId);
   fn poll_event(&mut self) -> Option<Event>;
+  fn set_title(&mut self, title: &str);
+  fn get_size(&self) -> Vec3i;
 
   fn new_image(&mut self, image: Image) -> PlatformId;
   fn get_image_size(&mut self, image_id: PlatformId) -> Option<Vec3i>;
@@ -110,6 +113,7 @@ pub trait Platform {
 
   fn reset(&mut self);
   fn translate(&mut self, pos: Vec3i);
+  fn get_translation(&mut self) -> Vec3i;
   //fn scale(&mut self, scale: Vec3i);
 
   fn set_color(&mut self, color: Color);

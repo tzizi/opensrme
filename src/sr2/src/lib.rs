@@ -167,6 +167,7 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
     if context.time - last_second >= 1000 {
       last_second = context.time;
       //println!("{}", fps);
+      context.platform.set_title(&format!("Saints Row 2 ({} FPS)", fps)[..]);
       fps = 0;
     } else {
       fps += 1;

@@ -15,6 +15,7 @@ pub struct SDL2Platform {
   texture_creator: sdl2::render::TextureCreator<sdl2::video::WindowContext>,
 
   textures: HashMap<PlatformId, sdl2::render::Texture>,
+  image_sizes: HashMap<PlatformId, Vec3i>,
 
   offset: Vec3i
 }
@@ -123,6 +124,7 @@ impl Platform for SDL2Platform {
       sdl_canvas: canvas,
       texture_creator: texture_creator,
       textures: HashMap::new(),
+      image_sizes: HashMap::new(),
       offset: Vec3i::new2(0, 0)
     }
   }
@@ -150,9 +152,18 @@ impl Platform for SDL2Platform {
 
       let id = self.cache.get_id();
       self.textures.insert(id, texture);
+      self.image_sizes.insert(id, image.size);
       id
     } else {
       0
+    }
+  }
+
+  fn get_image_size(&mut self, image_id: PlatformId) -> Option<Vec3i> {
+    if let Some(size) = self.image_sizes.get(&image_id) {
+      Some(*size)
+    } else {
+      None
     }
   }
 
@@ -179,13 +190,13 @@ impl Platform for SDL2Platform {
     self.sdl_canvas.clear();
   }
 
-  fn draw_region(&mut self, image: &PlatformId,
+  fn draw_region(&mut self, image: PlatformId,
                  x_src: IScalar, y_src: IScalar,
                  width: IScalar, height: IScalar,
                  flip: Flip,
                  rotate: Option<Rotate>,
                  x_dest: IScalar, y_dest: IScalar) {
-    if let Some(image) = self.textures.get(image) {
+    if let Some(image) = self.textures.get(&image) {
       let mut angle = 0.0;
       let mut center = None;
       if let Some(rotate) = rotate {

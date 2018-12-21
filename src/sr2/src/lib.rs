@@ -20,6 +20,7 @@ mod route;
 mod util;
 mod input;
 mod image;
+mod text;
 mod screen;
 use screen::Screen;
 
@@ -41,7 +42,7 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
   let splash = platform.load_image_from_filename(&(*archive), "Title.png");
   platform.set_color(Color { r: 0, g: 0, b: 0, a: 255 });
   platform.clear();
-  platform.draw_region(&splash, 0, 0, 240, 300, 0, None, 0, 10);
+  platform.draw_region(splash, 0, 0, 240, 300, 0, None, 0, 10);
   platform.swap();
 
   let datacontext = read_bin_all(&(*archive)).unwrap();
@@ -50,14 +51,20 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
   //let mut images = vec![];
   let mut palette_images = vec![];
 
-  for i in 0..datacontext.palettes.len() {
+  for _i in 0..datacontext.palettes.len() {
     let mut images = vec![];
-    for j in 0..datacontext.images.len() {
+    for _j in 0..datacontext.images.len() {
       images.push(0 as PlatformId);
     }
 
     palette_images.push(images);
   }
+
+  let mut font_images = vec![];
+  for _i in 0..datacontext.fonts.len() {
+    font_images.push(0 as PlatformId);
+  }
+
   //println!("{:?}", datacontext);
 
   /*for i in datacontext.effects.iter() {
@@ -86,6 +93,7 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
     delta: 0,
     data: datacontext,
     palette_images,
+    font_images,
     levels: std::collections::HashMap::new(),
     game: std::ptr::null_mut(),
     screen: None,
@@ -102,6 +110,11 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
       image: image::new_with_path_palette(&i[..], &context.data.palettes[1])//platform.load_image_from_filename(&(*archive), &i[..])
     });
 }*/
+
+  for i in 0..context.data.fonts.len() {
+    println!("Loading font #{}", i);
+    text::load_font(i as FontId);
+  }
 
   for i in 0..context.data.images.len() {
     println!("Loading image #{}", i);

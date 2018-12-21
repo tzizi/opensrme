@@ -2,6 +2,7 @@ use opensrme_common::*;
 
 pub type Id = i32;
 pub type SpriteId = i16;
+pub type FontId = Id;
 pub type TextId = Id;
 pub type ClipId = Id;
 pub type EffectId = Id;
@@ -24,8 +25,8 @@ pub struct Palette {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Font {
   pub name: String,
-  pub palette: i32,
-  pub height: i32,
+  pub palette: PaletteId,
+  pub height: i16,
   pub widths: Vec<Vec<i16>>,
   pub offsets: Vec<Vec<i16>>,
   pub size_addition: i16
@@ -34,7 +35,7 @@ pub struct Font {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Language {
   pub strings: Vec<String>,
-  pub fontid: i16
+  pub font_unk: i16
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]

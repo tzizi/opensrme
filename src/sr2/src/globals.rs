@@ -10,6 +10,7 @@ pub struct Context {
   pub delta: Time,
   pub data: DataContext,
   pub palette_images: Vec<Vec<PlatformId>>,
+  pub font_images: Vec<PlatformId>,
   pub levels: HashMap<LevelId, Level>,
   pub game: *mut screen::GameScreen,
   pub screen: Option<Box<screen::Screen>>,

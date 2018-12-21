@@ -133,7 +133,7 @@ pub fn draw_sprite_palette(spriteid: SpriteId, pos: Vec3i, flip: Flip, palette_m
         }
 
         context.platform.draw_region(
-          &context.palette_images[palette as usize][image_id as usize],
+          context.palette_images[palette as usize][image_id as usize],
           start_x as IScalar,
           start_y as IScalar,
           (aabb[2] - aabb[0]) as IScalar,

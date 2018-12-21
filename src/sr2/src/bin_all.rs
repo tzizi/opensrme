@@ -51,9 +51,10 @@ fn read_fonts<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Font>> {
     font_offsets.push(vec![]);
     font_size_additions.push(0);
 
-    let styles = file.read_short()?;
+    // always 1, style?
+    let unk = file.read_short()?;
 
-    for j in 0..styles {
+    for j in 0..unk {
       file.skip(4)?;
 
       font_widths[i as usize].push(vec![]);
@@ -84,6 +85,8 @@ fn read_fonts<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Font>> {
       size_addition: font_size_additions[font_id]
     };
 
+    //println!("{:?}", font);
+
     fonts.push(font);
   }
 
@@ -112,7 +115,7 @@ fn read_strings<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Language>> {
 
     let mut language = Language {
       strings: vec![],
-      fontid: 0
+      font_unk: 0
     };
 
     let strings_amt = file.read_short()?;
@@ -120,7 +123,8 @@ fn read_strings<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Language>> {
       language.strings.push(read_latin1_string(file)?);
     }
 
-    language.fontid = file.read_short()?;
+    // always 0
+    language.font_unk = file.read_short()?;
   }
 
   Ok(languages)

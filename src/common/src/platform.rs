@@ -22,8 +22,7 @@ impl IdCache {
     id
   }
 
-  pub fn free_id(&mut self, id: PlatformId) {
-  }
+  pub fn free_id(&mut self, _id: PlatformId) {}
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -81,6 +80,7 @@ pub trait Platform {
   fn poll_event(&mut self) -> Option<Event>;
 
   fn new_image(&mut self, image: Image) -> PlatformId;
+  fn get_image_size(&mut self, image_id: PlatformId) -> Option<Vec3i>;
   fn load_image(&mut self, image: &[u8]) -> PlatformId {
     if let Ok(image) = image::load_from_memory(image) {
       let image = image.to_rgba();
@@ -114,7 +114,7 @@ pub trait Platform {
 
   fn set_color(&mut self, color: Color);
   fn clear(&mut self);
-  fn draw_region(&mut self, image: &PlatformId,
+  fn draw_region(&mut self, image: PlatformId,
                  x_src: IScalar, y_src: IScalar,
                  width: IScalar, height: IScalar,
                  flip: Flip,

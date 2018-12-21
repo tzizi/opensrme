@@ -187,13 +187,14 @@ pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
 
 fn level_drawable_aabb(layer: &LevelLayer) -> (Vec3i, Vec3i) {
   let context = globals::get_context();
-  let size = (context.platform.get_size() / layer.tilesize.x) + 2;
+  let size = context.platform.get_size() / layer.tilesize.x;
+  let scale = 1. / context.platform.get_scale();
   let translate = context.platform.get_translation() / layer.tilesize.x;
 
   let startx = std::cmp::max(0, -translate.x);
   let starty = std::cmp::max(0, -translate.y);
-  let endx = std::cmp::min(layer.size.x, size.x - translate.x);
-  let endy = std::cmp::min(layer.size.y, size.y - translate.y);
+  let endx = std::cmp::min(layer.size.x, util::iscale_ceil(scale, size.x) - translate.x + 2);
+  let endy = std::cmp::min(layer.size.y, util::iscale_ceil(scale, size.y) - translate.y + 2);
 
   (Vec3i::new2(startx, starty), Vec3i::new2(endx, endy))
   //std::cmp::min(level.size.x,

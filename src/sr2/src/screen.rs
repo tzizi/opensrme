@@ -13,6 +13,7 @@ pub struct GameScreen {
   pub entities: Vec<entity::Entity>,
   pub main_camera_pos: Vec3i,
   pub camera: Camera,
+  pub scale: FScalar,
 
   pub vehicle_state: vehicle::VehicleState,
   pub entity_spawn_counter: usize
@@ -28,6 +29,7 @@ impl GameScreen {
       entities: vec![],
       main_camera_pos: Vec3i::default(),
       camera: Camera::default(),
+      scale: 1.,
 
       vehicle_state: vehicle::VehicleState::new(),
       entity_spawn_counter: 0
@@ -56,11 +58,15 @@ impl GameScreen {
     }
 
     if context.input.buttons.get(&MouseButton::Left).is_some() {
-      self.main_camera_pos = self.main_camera_pos + context.input.mouse_delta;
+      self.main_camera_pos = self.main_camera_pos + Vec3i::from(Vec3f::from(context.input.mouse_delta) / self.scale);
     }
 
     if context.input.buttons.get(&MouseButton::Right).is_some() {
       self.camera.pos = context.input.mouse - self.main_camera_pos - (self.camera.size / 2);
+    }
+
+    if context.input.mouse_scroll != 0 {
+      self.scale -= context.input.mouse_scroll as FScalar * 0.1;
     }
   }
 
@@ -201,6 +207,7 @@ impl Screen for GameScreen {
     context.platform.reset();
 
     context.platform.translate(self.main_camera_pos);
+    context.platform.scale(self.scale);
     //context.platform.draw_region(&image, 0, 0, x, x, 0, None, 50, 10);
 
     level::draw_level_layer(&self.level.layer1);

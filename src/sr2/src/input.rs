@@ -44,7 +44,8 @@ pub struct InputContext {
   pub buttons: HashMap<MouseButton, Time>,
   pub button_delta: HashMap<MouseButton, bool>,
   pub mouse: Vec3i,
-  pub mouse_delta: Vec3i
+  pub mouse_delta: Vec3i,
+  pub mouse_scroll: i32
 }
 
 impl InputContext {
@@ -52,6 +53,7 @@ impl InputContext {
     self.key_delta.clear();
     self.button_delta.clear();
     self.mouse_delta = Vec3i::default();
+    self.mouse_scroll = 0;
   }
 
   pub fn process_platform_event(&mut self, event: Event) {
@@ -85,6 +87,12 @@ impl InputContext {
       Event::MousePos { pos, delta } => {
         self.mouse = pos;
         self.mouse_delta = self.mouse_delta + delta;
+      },
+      Event::MouseScroll(scroll) => {
+        self.mouse_scroll += match scroll {
+          MouseScroll::Up   => -1,
+          MouseScroll::Down => 1
+        };
       },
       _ => {}
     }

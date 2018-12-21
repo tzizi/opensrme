@@ -91,6 +91,14 @@ pub fn fmax(num1: f64, num2: f64) -> f64 {
   }
 }
 
+pub fn iscale_floor(scale: FScalar, x: IScalar) -> IScalar {
+  (x as FScalar * scale) as IScalar
+}
+
+pub fn iscale_ceil(scale: FScalar, x: IScalar) -> IScalar {
+  (x as FScalar * scale).ceil() as IScalar
+}
+
 pub fn interpolate<T: Add<Output=T>+Sub<Output=T>+Mul<Output=T>+Div<Output=T>+PartialEq+Copy>(out_min: T, out_max: T, in_min: T, in_max: T, value: T) -> T {
   let zero = out_max - out_max;
 

@@ -111,10 +111,18 @@ pub trait Platform {
   }
   fn unload_image(&mut self, image: PlatformId);
 
-  fn reset(&mut self);
+  fn reset(&mut self) {
+    self.reset_translation();
+    self.reset_scale();
+  }
+
+  fn reset_translation(&mut self);
   fn translate(&mut self, pos: Vec3i);
-  fn get_translation(&mut self) -> Vec3i;
-  //fn scale(&mut self, scale: Vec3i);
+  fn get_translation(&self) -> Vec3i;
+
+  fn reset_scale(&mut self);
+  fn scale(&mut self, scale: FScalar);
+  fn get_scale(&self) -> FScalar;
 
   fn set_color(&mut self, color: Color);
   fn clear(&mut self);

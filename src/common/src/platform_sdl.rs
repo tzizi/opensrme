@@ -17,7 +17,8 @@ pub struct SDL2Platform {
   textures: HashMap<PlatformId, sdl2::render::Texture>,
   image_sizes: HashMap<PlatformId, Vec3i>,
 
-  offset: Vec3i
+  offset: Vec3i,
+  scale: FScalar
 }
 
 
@@ -95,6 +96,17 @@ fn get_event(event: SEvent) -> Option<Event> {
         delta: Vec3i::new2(xrel, yrel)
       }
     },
+    SEvent::MouseWheel { y, .. } => {
+      Event::MouseScroll(
+        if y < 0 {
+          MouseScroll::Down
+        } else if y > 0 {
+          MouseScroll::Up
+        } else {
+          return None
+        }
+      )
+    },
     SEvent::Window { win_event, .. }             => {
       match win_event {
         sdl2::event::WindowEvent::SizeChanged(x, y) => {
@@ -105,6 +117,23 @@ fn get_event(event: SEvent) -> Option<Event> {
     },
     _                                         => return None
   })
+}
+
+fn create_rect(x_src: IScalar, y_src: IScalar,
+               width: IScalar, height: IScalar) -> sdl2::rect::Rect {
+  sdl2::rect::Rect::new(x_src, y_src, width as u32, height as u32)
+}
+
+fn iscale(scale: FScalar, x: IScalar) -> IScalar {
+  (x as FScalar * scale).ceil() as IScalar
+}
+
+fn create_scaled_rect(
+  scale: FScalar,
+  x_src: IScalar, y_src: IScalar,
+  width: IScalar, height: IScalar) -> sdl2::rect::Rect {
+  create_rect(iscale(scale, x_src), iscale(scale, y_src),
+              iscale(scale, width), iscale(scale, height))
 }
 
 // rewrite to use gfx/glium + gfx_graphics
@@ -133,7 +162,8 @@ impl Platform for SDL2Platform {
       texture_creator: texture_creator,
       textures: HashMap::new(),
       image_sizes: HashMap::new(),
-      offset: Vec3i::new2(0, 0)
+      offset: Vec3i::new2(0, 0),
+      scale: 1.
     }
   }
 
@@ -190,17 +220,28 @@ impl Platform for SDL2Platform {
     }
   }
 
-  fn reset(&mut self) {
-    self.offset.x = 0;
-    self.offset.y = 0;
+  fn reset_translation(&mut self) {
+    self.offset = Vec3i::default();
   }
 
   fn translate(&mut self, pos: Vec3i) {
     self.offset = self.offset + pos;
   }
 
-  fn get_translation(&mut self) -> Vec3i {
+  fn get_translation(&self) -> Vec3i {
     self.offset
+  }
+
+  fn reset_scale(&mut self) {
+    self.scale = 1.;
+  }
+
+  fn scale(&mut self, scale: FScalar) {
+    self.scale *= scale;
+  }
+
+  fn get_scale(&self) -> FScalar {
+    self.scale
   }
 
   fn set_color(&mut self, color: Color) {
@@ -225,27 +266,27 @@ impl Platform for SDL2Platform {
         center = Some(sdl2::rect::Point::new(rotate.origin.x, rotate.origin.y));
       }
 
-      let mut width: u32 = width as u32;
-      let mut height: u32 = height as u32;
+      let mut width = width;
+      let mut height = height;
       let query = image.query();
-      if width > query.width {
-        width = query.width;
+      if width > query.width as IScalar {
+        width = query.width as IScalar ;
       }
 
-      if height > query.height {
-        height = query.height;
+      if height > query.height as IScalar {
+        height = query.height as IScalar;
       }
 
       //let src = sdl2::rect::Rect::new(x_src, y_src, (width as i32 + x_src) as u32, (height as i32 + y_src) as u32);
       //let dst = sdl2::rect::Rect::new(x_dest, y_dest, (width as i32 + x_dest) as u32, (height as i32 + y_dest) as u32);
-      let src = sdl2::rect::Rect::new(x_src, y_src, width, height);
-      let dst = sdl2::rect::Rect::new(x_dest + self.offset.x, y_dest + self.offset.y, width, height);
+      let src = create_rect(x_src, y_src, width, height);
+      let dst = create_scaled_rect(self.scale, x_dest + self.offset.x, y_dest + self.offset.y, width, height);
       self.sdl_canvas.copy_ex(image, src, dst, angle, center, (flip & FLIP_H) != 0, (flip & FLIP_V) != 0).unwrap();
     }
   }
 
   fn fill_rect(&mut self, x: IScalar, y: IScalar, width: IScalar, height: IScalar) {
-    self.sdl_canvas.fill_rect(Some(sdl2::rect::Rect::new(x + self.offset.x, y + self.offset.y, width as u32, height as u32))).unwrap();
+    self.sdl_canvas.fill_rect(Some(create_scaled_rect(self.scale, x + self.offset.x, y + self.offset.y, width, height))).unwrap();
   }
 
   fn swap(&mut self) {

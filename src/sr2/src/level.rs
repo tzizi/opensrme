@@ -173,8 +173,6 @@ pub fn load_images(levelid: LevelId) {
 }
 
 pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
-  let mut context = globals::get_context();
-
   let mut entities = vec![];
 
   for level_entity in level.entities.iter() {

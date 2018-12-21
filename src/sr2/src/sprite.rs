@@ -87,8 +87,8 @@ pub fn create_sprite(info: Vec<i16>, aabb: Vec<i16>) -> Sprite {
 pub fn calc_aabb(sprite: &Sprite, pos: Vec3i, flip: Flip) -> [i16; 4] {
   let mut x = sprite.aabb[0];
   let mut y = sprite.aabb[1];
-  let mut width = sprite.aabb[2];
-  let mut height = sprite.aabb[3];
+  let width = sprite.aabb[2];
+  let height = sprite.aabb[3];
 
   if flip & FLIP_H != 0 {
     x = -(x + width - 1);
@@ -105,7 +105,7 @@ pub fn calc_aabb(sprite: &Sprite, pos: Vec3i, flip: Flip) -> [i16; 4] {
 }
 
 pub fn draw_sprite_palette(spriteid: SpriteId, pos: Vec3i, flip: Flip, palette_map: &Vec<(ImageId, PaletteId)>) {
-  let mut context = globals::get_context();
+  let context = globals::get_context();
 
   let sprite = &context.data.sprites[spriteid as usize];
   let aabb = calc_aabb(&sprite, pos, flip);
@@ -219,7 +219,7 @@ pub fn draw_sprite(spriteid: SpriteId, pos: Vec3i, flip: Flip) {
 }
 
 pub fn get_image_from_sprite(spriteid: SpriteId) -> Option<ImageId> {
-  let mut context = globals::get_context();
+  let context = globals::get_context();
 
   let sprite = &context.data.sprites[spriteid as usize];
 

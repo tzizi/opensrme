@@ -2,7 +2,7 @@ use super::*;
 
 pub trait Screen {
   fn init(&mut self) {}
-  fn step(&mut self, delta: Time) {}
+  fn step(&mut self, _delta: Time) {}
   fn draw(&mut self) {}
 }
 
@@ -20,7 +20,7 @@ pub struct GameScreen {
 
 impl GameScreen {
   pub fn new(levelid: LevelId) -> Self {
-    let context = globals::get_context();
+    //let context = globals::get_context();
 
     let mut game = GameScreen {
       level: level::get_level_from_levelid(levelid),

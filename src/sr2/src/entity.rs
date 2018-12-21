@@ -203,7 +203,7 @@ pub struct PersonData {
 
 pub trait EntityData {
   fn init(&mut self, _entity: &mut EntityBase) {}
-  fn spawn(&mut self, entity: &mut EntityBase, pos: Vec3f) -> Option<Vec3f> { None }
+  fn spawn(&mut self, _entity: &mut EntityBase, _pos: Vec3f) -> Option<Vec3f> { None }
   fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
   fn draw(&self, _entity: &EntityBase) {}
   fn despawn_action(&mut self, _entity: &mut EntityBase) -> bool { true }

@@ -11,7 +11,7 @@ fn read_palettes<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Palette>> {
 
   let mut palettes = vec![];
 
-  for i in 0..palette_amt {
+  for _i in 0..palette_amt {
     let size = file.readInt()?;
     let elements = size / 3;
 
@@ -19,7 +19,7 @@ fn read_palettes<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Palette>> {
       colors: vec![]
     };
 
-    for j in 0..elements {
+    for _j in 0..elements {
       palette.colors.push(Color {
         r: file.read_unsigned_byte()?,
         g: file.read_unsigned_byte()?,
@@ -110,7 +110,7 @@ fn read_strings<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Language>> {
 
   let languages = vec![];
 
-  for i in 0..languages_amt {
+  for _i in 0..languages_amt {
     file.skip(4)?;
 
     let mut language = Language {
@@ -119,7 +119,7 @@ fn read_strings<T: DataInputStream>(file: &mut T) -> io::Result<Vec<Language>> {
     };
 
     let strings_amt = file.read_short()?;
-    for j in 0..strings_amt {
+    for _j in 0..strings_amt {
       language.strings.push(read_latin1_string(file)?);
     }
 
@@ -137,7 +137,7 @@ fn read_sprites<T: DataInputStream>(file: &mut T, context: &mut DataContext) -> 
   sprite_info_offsets.push(0);
   let mut aabbs = vec![];
 
-  for i in 0..images_amt {
+  for _i in 0..images_amt {
     aabbs.push(vec! [
       file.read_short()?,
       file.read_short()?,
@@ -149,13 +149,13 @@ fn read_sprites<T: DataInputStream>(file: &mut T, context: &mut DataContext) -> 
   }
 
   let mut sprite_infos = vec![];
-  for i in 0..sprite_info_offsets[images_amt as usize] {
+  for _i in 0..sprite_info_offsets[images_amt as usize] {
     sprite_infos.push(file.read_short()?);
   }
 
   let mut image_names = vec![];
   let image_names_amt = file.read_short()?;
-  for i in 0..image_names_amt {
+  for _i in 0..image_names_amt {
     image_names.push(file.read_utf()?);
   }
 

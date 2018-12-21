@@ -1,5 +1,4 @@
 use super::*;
-use std::cmp;
 
 pub fn load_font(fontid: FontId) -> PlatformId {
   let context = globals::get_context();

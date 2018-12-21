@@ -177,7 +177,7 @@ impl EntityData for PersonData {
     }
   }
 
-  fn spawn(&mut self, entity: &mut EntityBase, pos: Vec3f) -> Option<Vec3f> {
+  fn spawn(&mut self, _entity: &mut EntityBase, pos: Vec3f) -> Option<Vec3f> {
     let game = globals::get_game();
     if level::pos_is_sidewalk(&game.level, pos) {
       Some(pos)

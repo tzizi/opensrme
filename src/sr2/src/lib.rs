@@ -36,7 +36,7 @@ pub fn check(archive: &Archive) -> io::Result<bool> {
                      "MIDlet-Name": "Saints Row 2"))
 }
 
-pub fn main(archive: Box<Archive>, args: Vec<String>) {
+pub fn main(archive: Box<Archive>, _args: Vec<String>) {
   let mut platform = SDL2Platform::new("Saints Row 2", 800, 800);
 
   let splash = platform.load_image_from_filename(&(*archive), "Title.png");
@@ -130,17 +130,8 @@ pub fn main(archive: Box<Archive>, args: Vec<String>) {
 
   //let image = context.platform.load_image_from_filename(archive, "Car_Police.png");
 
-  let mut x = 0;
-  let draw_clip = false;
-  let mut current_sprite: usize = 1200;
-  let mut current_orientation: usize = 0;
-  let mut leftpressed = false;
-  let mut offset = Vec3i::new2(0, 0);
-
   let mut last_second = context.time;
   let mut fps = 0;
-  let mut last_key_time: Time = 0;
-  let mut entity_spawn_counter: usize = 0;
   while context.running {
     let lasttime = context.time;
     context.time = instant_get_millis();

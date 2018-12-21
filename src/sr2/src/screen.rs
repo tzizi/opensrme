@@ -62,7 +62,7 @@ impl GameScreen {
     }
 
     if context.input.buttons.get(&MouseButton::Right).is_some() {
-      self.camera.pos = context.input.mouse - self.main_camera_pos - (self.camera.size / 2);
+      self.camera.pos = Vec3i::from(Vec3f::from(context.input.mouse) / self.scale) - self.main_camera_pos - (self.camera.size / 2);
     }
 
     if context.input.mouse_scroll != 0 {

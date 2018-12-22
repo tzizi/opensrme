@@ -38,7 +38,7 @@ pub fn check(archive: &Archive) -> io::Result<bool> {
 
 fn draw_splash(archive: &Box<Archive>, platform: &mut Platform) {
   let splash = platform.load_image_from_filename(&(**archive), "Title.png");
-  platform.set_color(Color { r: 100, g: 0, b: 0, a: 255 });
+  platform.set_color(Color { r: 0, g: 0, b: 0, a: 255 });
   platform.clear();
 
   let size = platform.get_size();

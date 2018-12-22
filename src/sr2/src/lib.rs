@@ -36,14 +36,23 @@ pub fn check(archive: &Archive) -> io::Result<bool> {
                      "MIDlet-Name": "Saints Row 2"))
 }
 
+fn draw_splash(archive: &Box<Archive>, platform: &mut Platform) {
+  let splash = platform.load_image_from_filename(&(**archive), "Title.png");
+  platform.set_color(Color { r: 100, g: 0, b: 0, a: 255 });
+  platform.clear();
+
+  let size = platform.get_size();
+  let scaley = size.y as FScalar / 300.;
+  platform.scale(scaley);
+
+  platform.draw_region(splash, 0, 0, 240, 300, 0, None, (((size.x as FScalar / scaley) - 240.) / 2.) as IScalar, 0);
+  platform.swap();
+}
+
 pub fn main(archive: Box<Archive>, _args: Vec<String>) {
   let mut platform = SDL2Platform::new("Saints Row 2", 800, 800);
 
-  let splash = platform.load_image_from_filename(&(*archive), "Title.png");
-  platform.set_color(Color { r: 0, g: 0, b: 0, a: 255 });
-  platform.clear();
-  platform.draw_region(splash, 0, 0, 240, 300, 0, None, 0, 10);
-  platform.swap();
+  draw_splash(&archive, &mut platform);
 
   let datacontext = read_bin_all(&(*archive)).unwrap();
   println!("{:?}", datacontext.levels);

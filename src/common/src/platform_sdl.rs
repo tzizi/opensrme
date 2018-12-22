@@ -119,9 +119,9 @@ fn get_event(event: SEvent) -> Option<Event> {
   })
 }
 
-fn create_rect(x_src: IScalar, y_src: IScalar,
+fn create_rect(x: IScalar, y: IScalar,
                width: IScalar, height: IScalar) -> sdl2::rect::Rect {
-  sdl2::rect::Rect::new(x_src, y_src, width as u32, height as u32)
+  sdl2::rect::Rect::new(x, y, width as u32, height as u32)
 }
 
 fn iscale(scale: FScalar, x: IScalar) -> IScalar {
@@ -130,9 +130,9 @@ fn iscale(scale: FScalar, x: IScalar) -> IScalar {
 
 fn create_scaled_rect(
   scale: FScalar,
-  x_src: IScalar, y_src: IScalar,
+  x: IScalar, y: IScalar,
   width: IScalar, height: IScalar) -> sdl2::rect::Rect {
-  create_rect(iscale(scale, x_src), iscale(scale, y_src),
+  create_rect(iscale(scale, x), iscale(scale, y),
               iscale(scale, width), iscale(scale, height))
 }
 
@@ -184,7 +184,7 @@ impl Platform for SDL2Platform {
   }
 
   fn get_size(&self) -> Vec3i {
-    let (x, y) = self.sdl_canvas.window().size();
+    let (x, y) = self.sdl_canvas.window().drawable_size();
     Vec3i::new2(x as IScalar, y as IScalar)
   }
 

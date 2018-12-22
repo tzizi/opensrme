@@ -73,9 +73,16 @@ impl PersonData {
 
     match entity.stance {
       EntityStance::Standing => {
-        entity.speed = 15. + util::pick_float(15.);
-        self.pick_sidewalk_direction(entity);
-        entity.set_new_stance(EntityStance::Walking);
+        let level = &globals::get_game().level;
+
+        for _i in 0..4 {
+          self.pick_sidewalk_direction(entity);
+          if level::pos_is_sidewalk(level, entity.pos + self.walking_direction) {
+            entity.set_new_stance(EntityStance::Walking);
+            entity.speed = 15. + util::pick_float(15.);
+            break;
+          }
+        }
       },
       EntityStance::Walking => {
         let old_angle = entity.angle;

@@ -11,6 +11,7 @@ pub struct GameScreen {
   pub level: Level,
   pub levelid: LevelId,
   pub entities: Vec<entity::Entity>,
+  pub entity_ids: Vec<EntityId>,
   pub main_camera_pos: Vec3i,
   pub camera: Camera,
   pub scale: FScalar,
@@ -27,6 +28,7 @@ impl GameScreen {
       level: level::get_level_from_levelid(levelid),
       levelid,
       entities: vec![],
+      entity_ids: vec![],
       main_camera_pos: Vec3i::default(),
       camera: Camera::default(),
       scale: 1.,
@@ -164,6 +166,25 @@ impl GameScreen {
       }
     }
   }
+
+  fn create_entity_ids(&mut self) {
+    self.entity_ids = vec![];
+
+    for i in 0..self.entities.len() {
+      self.entity_ids.push(i as EntityId);
+    }
+
+    GameScreen::update_entity_ids(&mut self.entity_ids, &self.entities);
+  }
+
+  fn update_entity_ids(entity_ids: &mut Vec<EntityId>, entities: &Vec<entity::Entity>) {
+    entity_ids.sort_by(|a, b| {
+      let entity_a = &entities[*a as usize];
+      let entity_b = &entities[*b as usize];
+
+      entity_a.base.sort_order.cmp(&entity_b.base.sort_order)
+    });
+  }
 }
 
 impl Screen for GameScreen {
@@ -185,6 +206,7 @@ impl Screen for GameScreen {
       image::load_image(13, i);
     }
     self.entities = level::load_entities(&self.level);
+    self.create_entity_ids();
   }
 
   fn step(&mut self, delta: Time) {
@@ -210,14 +232,14 @@ impl Screen for GameScreen {
     context.platform.scale(self.scale);
     //context.platform.draw_region(&image, 0, 0, x, x, 0, None, 50, 10);
 
+    GameScreen::update_entity_ids(&mut self.entity_ids, &self.entities);
+
     level::draw_level_layer(&self.level.layer1);
     level::draw_shadows(&self.level);
-    level::draw_objects(&self.level);
+    level::draw_objects(&self.level, &self.entities, &self.entity_ids);
     level::draw_level_layer(&self.level.layer2);
 
-    for entity in self.entities.iter() {
-      entity.draw();
-    }
+
 
     // draw camera
     context.platform.set_color(Color { r: 255, g: 0, b: 0, a: 255 });

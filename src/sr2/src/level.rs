@@ -259,7 +259,10 @@ pub fn draw_shadows(level: &Level) {
   }
 }
 
-pub fn draw_objects(level: &Level) {
+pub fn draw_objects(level: &Level, entities: &Vec<entity::Entity>, entity_ids: &Vec<EntityId>) {
+  let mut entity_sort_id = 0;
+  let mut entity_sort_order = entities[entity_ids[entity_sort_id] as usize].base.sort_order;
+
   for i in 0..level.objects.len() {
     let object = &level.objects[i];
 
@@ -267,7 +270,25 @@ pub fn draw_objects(level: &Level) {
       continue;
     }
 
+    if entity_sort_id < entities.len() {
+      while entity_sort_order < object.pos.y {
+        let entity = &entities[entity_ids[entity_sort_id] as usize];
+        entity.draw();
+
+        entity_sort_id += 1;
+        if entity_sort_id >= entities.len() {
+          break;
+        }
+
+        entity_sort_order = entity.base.sort_order;
+      }
+    }
+
     sprite::draw_sprite(object.sprite, object.pos, 0);
+  }
+
+  for i in entity_sort_id..entity_ids.len() {
+    entities[entity_ids[i] as usize].draw();
   }
 }
 

@@ -144,6 +144,7 @@ pub struct EntityBase {
   pub prev_pos: Vec3f,
   pub prev_angle: Angle,
   pub speed: FScalar,
+  pub sort_order: IScalar,
 
   pub stance: EntityStance,
   pub stance_millis: Time,
@@ -151,7 +152,8 @@ pub struct EntityBase {
   pub palette: PaletteId,
   pub gender: EntityGender,
 
-  pub hidden: bool // 0x01
+  pub hidden: bool,          //    0x01
+  pub can_update_sort: bool, // 0x20000
 }
 
 impl EntityBase {
@@ -168,6 +170,8 @@ impl EntityBase {
     let amount = (delta as FScalar) / 1000. * self.speed;
     self.pos.x += amount * self.angle.cos();
     self.pos.y += amount * self.angle.sin();
+
+    self.update_pos();
   }
 
   pub fn get_class(&self) -> &EntityClass {
@@ -192,6 +196,12 @@ impl EntityBase {
 
   pub fn pick_npc_person_palette() -> PaletteId {
     12 + util::pick_int(1)
+  }
+
+  pub fn update_pos(&mut self) {
+    if self.can_update_sort {
+      self.sort_order = self.pos.y as IScalar;
+    }
   }
 }
 
@@ -235,6 +245,7 @@ impl Entity {
       class,
       entity_type: get_entitytype(context.data.classes[class as usize].entity_type),
       pos: Vec3f::new2(0., 0.),
+      sort_order: 0,
       angle: 0.,
       prev_pos: Vec3f::new2(0., 0.),
       prev_angle: 0.,
@@ -243,7 +254,9 @@ impl Entity {
       palette: 0,
       gender: EntityGender::Female,
       speed: 0.,
-      hidden: false
+
+      hidden: false,
+      can_update_sort: true
     };
 
     let data = create_entity_data(base.entity_type);
@@ -261,6 +274,7 @@ impl Entity {
   pub fn spawn(&mut self, pos: Vec3f) -> Option<Vec3f> {
     if let Some(pos) = self.data.spawn(&mut self.base, pos) {
       self.base.pos = pos;
+      self.base.update_pos();
       Some(pos)
     } else {
       None

@@ -1,3 +1,9 @@
+// Use system allocator for non-debug builds
+use std::alloc::System;
+#[global_allocator]
+#[cfg(not(debug_assertions))]
+static GLOBAL: System = System;
+
 extern crate opensrme_common;
 
 extern crate opensrme_lsw2;

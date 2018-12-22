@@ -68,7 +68,10 @@ impl GameScreen {
     }
 
     if context.input.mouse_scroll != 0 {
+      let oldpos = Vec3i::from(Vec3f::from(context.input.mouse) / self.scale);
       self.scale -= context.input.mouse_scroll as FScalar * 0.1;
+      let newpos = Vec3i::from(Vec3f::from(context.input.mouse) / self.scale);
+      self.main_camera_pos = self.main_camera_pos + (newpos - oldpos);
     }
   }
 

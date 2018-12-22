@@ -1,4 +1,5 @@
 // Use system allocator for non-debug builds
+#[cfg(not(debug_assertions))]
 use std::alloc::System;
 #[global_allocator]
 #[cfg(not(debug_assertions))]

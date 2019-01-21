@@ -15,7 +15,7 @@ impl PersonData {
     }
   }
 
-  fn step_person(&mut self, entity: &mut EntityBase) -> bool {
+  fn step_person(&mut self, entity: &mut EntityBase, delta: Time) -> bool {
     if entity.stance == EntityStance::Dead {
       return true;
     }
@@ -44,7 +44,7 @@ impl PersonData {
       _ => {}
     }
 
-    // TODO: step route
+    entity.step_route(delta);
     return false;
   }
 
@@ -67,7 +67,7 @@ impl PersonData {
   }
 
   fn step_sidewalk_path(&mut self, entity: &mut EntityBase, delta: Time) -> bool {
-    if self.step_person(entity) {
+    if self.step_person(entity, delta) {
       return true;
     }
 
@@ -132,7 +132,7 @@ impl EntityData for PersonData {
   fn step(&mut self, entity: &mut EntityBase, delta: Time) {
     match entity.entity_type {
       EntityType::Type1 => {
-        self.step_person(entity);
+        self.step_person(entity, delta);
       },
       EntityType::Pedestrian => {
         self.step_sidewalk_path(entity, delta);
@@ -141,6 +141,10 @@ impl EntityData for PersonData {
         self.step_sidewalk_path(entity, delta);
       },
       EntityType::Gangster => {
+        // TODO
+        self.step_sidewalk_path(entity, delta);
+      },
+      EntityType::Type7 => {
         // TODO
         self.step_sidewalk_path(entity, delta);
       },
@@ -156,9 +160,9 @@ impl EntityData for PersonData {
     let context = globals::get_context();
     let class = entity.get_class();
 
-    if class.clip == -1 {
+    /*if class.clip == -1 {
       return;
-    }
+    }*/
 
     let mut stance = entity.stance;
     if stance == EntityStance::Unknown {
@@ -167,7 +171,12 @@ impl EntityData for PersonData {
 
     //println!("{:?} {:?}", class, stance);
 
-    let clip = &context.data.clips[(class.clip + stance as i32) as usize];
+    let index = class.clip + stance as i32;
+    if index == -1 {
+      return;
+    }
+
+    let clip = &context.data.clips[index as usize];
     let clip_angle = &clip[util::get_angle_in_clip(entity.angle, clip.len())];
     let current_sprite = clip_angle[util::get_frame_in_clip(entity.stance_millis, 700, clip_angle.len())];
 

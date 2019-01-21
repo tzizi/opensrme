@@ -152,11 +152,44 @@ pub struct EntityBase {
   pub palette: PaletteId,
   pub gender: EntityGender,
 
+  pub route: route::RouteData,
+
   pub hidden: bool,          //    0x01
+  pub following_route: bool, // 0x10000
   pub can_update_sort: bool, // 0x20000
 }
 
 impl EntityBase {
+  pub fn new(class: ClassId) -> Self {
+    let context = get_context();
+
+    EntityBase {
+      class,
+      entity_type: get_entitytype(context.data.classes[class as usize].entity_type),
+      pos: Vec3f::new2(0., 0.),
+      sort_order: 0,
+      angle: 0.,
+      prev_pos: Vec3f::new2(0., 0.),
+      prev_angle: 0.,
+      stance: EntityStance::Standing,
+      stance_millis: 0,
+      palette: 0,
+      gender: EntityGender::Female,
+
+      route: route::RouteData::default(),
+
+      speed: 0.,
+
+      hidden: false,
+      following_route: false,
+      can_update_sort: true
+    }
+  }
+
+  pub fn init(&mut self) {
+    *self = EntityBase::new(self.class);
+  }
+
   pub fn update_prev(&mut self) {
     self.prev_pos = self.pos;
     self.prev_angle = self.angle;
@@ -203,6 +236,19 @@ impl EntityBase {
       self.sort_order = self.pos.y as IScalar;
     }
   }
+
+  pub fn step_route(&mut self, delta: Time) {
+    if self.route.route.is_some() {
+      if let Some((pos, angle)) = self.route.step(self.speed, delta) {
+        //println!("{:?} {:?}", pos, angle);
+        self.angle = angle;
+        self.pos = pos;
+        self.update_pos();
+      } else {
+        self.following_route = false;
+      }
+    }
+  }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -239,26 +285,7 @@ fn create_entity_data(entity_type: EntityType) -> Box<EntityData> {
 
 impl Entity {
   pub fn new(class: ClassId) -> Self {
-    let context = get_context();
-
-    let base = EntityBase {
-      class,
-      entity_type: get_entitytype(context.data.classes[class as usize].entity_type),
-      pos: Vec3f::new2(0., 0.),
-      sort_order: 0,
-      angle: 0.,
-      prev_pos: Vec3f::new2(0., 0.),
-      prev_angle: 0.,
-      stance: EntityStance::Standing,
-      stance_millis: 0,
-      palette: 0,
-      gender: EntityGender::Female,
-      speed: 0.,
-
-      hidden: false,
-      can_update_sort: true
-    };
-
+    let base = EntityBase::new(class);
     let data = create_entity_data(base.entity_type);
 
     let mut entity = Entity {
@@ -271,7 +298,14 @@ impl Entity {
     entity
   }
 
+  pub fn init(&mut self) {
+    self.base.init();
+    self.data.init(&mut self.base);
+  }
+
   pub fn spawn(&mut self, pos: Vec3f) -> Option<Vec3f> {
+    self.init();
+
     if let Some(pos) = self.data.spawn(&mut self.base, pos) {
       self.base.pos = pos;
       self.base.update_pos();

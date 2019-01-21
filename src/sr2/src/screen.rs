@@ -223,6 +223,13 @@ impl Screen for GameScreen {
     self.step_entity_despawn();
 
     for entity in self.entities.iter_mut() {
+      /*if (entity.base.route.route.is_none() &&
+          entity.base.route.routeid.is_some()) {
+        entity.base.route.set_route_to_routeid();
+        entity.base.set_new_stance(entity::EntityStance::Running);
+        entity.base.speed = 20.;
+      }*/
+
       entity.step(delta);
     }
   }

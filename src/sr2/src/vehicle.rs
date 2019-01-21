@@ -395,8 +395,6 @@ impl EntityData for VehicleData {
       return None;
     }
 
-    self.init(entity);
-
     let game = globals::get_game();
     let tiledata = level::get_tiledata_for_pos(&game.level, entity.pos);
 

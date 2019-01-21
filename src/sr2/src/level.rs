@@ -1,6 +1,7 @@
 use opensrme_common::*;
 use types::*;
 use super::*;
+use route::*;
 use std::io;
 
 fn read_levellayer<T: DataInputStream>(file: &mut T) -> io::Result<LevelLayer> {
@@ -135,7 +136,7 @@ pub fn read_level<T: DataInputStream>(file: &mut T) -> io::Result<Level> {
   let mut routes = vec![];
   for _i in 0..routes_amt {
     let mut route = read_route(file)?;
-    route::calc_route_distance(&mut route);
+    route.set_distances();
     routes.push(route);
   }
 
@@ -178,6 +179,10 @@ pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
   for level_entity in level.entities.iter() {
     let mut entity = entity::Entity::new(level_entity.class);
     entity.base.pos = level_entity.pos.into();
+
+    if level_entity.route != -1 {
+      entity.base.route.routeid = Some(level_entity.route);
+    }
 
     entities.push(entity);
   }

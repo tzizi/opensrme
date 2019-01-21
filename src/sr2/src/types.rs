@@ -1,4 +1,5 @@
 use opensrme_common::*;
+use super::*;
 
 pub type Id = i32;
 pub type SpriteId = i16;
@@ -347,20 +348,6 @@ pub struct LevelObject {
   pub sprite: SpriteId
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct RoutePart {
-  // 0, 1, 2
-  pub pos: Vec3f,
-  // 3
-  pub distance: f64,
-  pub unk1: u8
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Route {
-  pub parts: Vec<RoutePart>
-}
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct LevelEntity {
   pub class: ClassId,
@@ -380,7 +367,7 @@ pub struct Level {
   pub tile_gangdata: Vec<i8>,
 
   pub entities: Vec<LevelEntity>,
-  pub routes: Vec<Route>
+  pub routes: Vec<route::Route>
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]

@@ -71,6 +71,10 @@ pub fn normalized_angle_diff(angle1: Angle, angle2: Angle) -> Angle {
   normalize_angle_pi(angle1 - angle2)
 }
 
+pub fn vec_angle(vector: Vec3f) -> Angle {
+  vector.y.atan2(vector.x)
+}
+
 pub fn fuzzy_float_eq(num1: f64, num2: f64) -> bool {
   (num1 - num2).abs() < 0.00001
 }

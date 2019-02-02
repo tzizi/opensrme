@@ -9,6 +9,8 @@ encoding = "0.2"
 rand = "*"
 byteorder = "1"
 crc = "^1.0.0"
+nalgebra = "0.16"
+ncollide2d = "0.17"
 
 [lib]
 name = "opensrme_sr2"

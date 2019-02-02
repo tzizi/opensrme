@@ -3,6 +3,8 @@ extern crate encoding;
 extern crate rand;
 extern crate byteorder;
 extern crate crc;
+extern crate nalgebra;
+extern crate ncollide2d;
 
 mod types;
 use types::*;
@@ -15,6 +17,7 @@ mod level;
 use level::*;
 mod vehicle;
 mod person;
+mod collision;
 mod entity;
 mod route;
 mod util;

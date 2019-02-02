@@ -259,6 +259,7 @@ pub struct PersonData {
 
 pub trait EntityData {
   fn init(&mut self, _entity: &mut EntityBase) {}
+  fn get_collision_shape(&self, _entity: &EntityBase) -> Option<collision::CollisionShape> { None }
   fn spawn(&mut self, _entity: &mut EntityBase, _pos: Vec3f) -> Option<Vec3f> { None }
   fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
   fn draw(&self, _entity: &EntityBase) {}
@@ -270,6 +271,7 @@ impl EntityData for NullEntityData {}
 
 pub struct Entity {
   pub base: EntityBase,
+  pub collision: Option<collision::EntityCollision>,
   pub data: Box<EntityData>
 }
 
@@ -290,6 +292,7 @@ impl Entity {
 
     let mut entity = Entity {
       base,
+      collision: None,
       data
     };
 
@@ -306,9 +309,12 @@ impl Entity {
   pub fn spawn(&mut self, pos: Vec3f) -> Option<Vec3f> {
     self.init();
 
+    if let Some(shape) = self.data.get_collision_shape(&self.base) {
+      self.collision = Some(collision::EntityCollision::new_from_shape(shape));
+    }
+
     if let Some(pos) = self.data.spawn(&mut self.base, pos) {
-      self.base.pos = pos;
-      self.base.update_pos();
+      self.set_pos(pos);
       Some(pos)
     } else {
       None
@@ -327,6 +333,20 @@ impl Entity {
     self.data.draw(&self.base);
   }
 
+  pub fn is_physical(&self) -> bool {
+    // TODO: extra checks
+    self.collision.is_some() && !self.base.hidden
+  }
+
+  pub fn set_pos(&mut self, pos: Vec3f) {
+    self.base.pos = pos;
+    self.base.update_pos();
+
+    if let Some(ref mut collision) = self.collision {
+      collision.update_isometry(&self.base);
+    }
+  }
+
   pub fn step(&mut self, delta: Time) {
     if self.base.hidden {
       return;
@@ -335,6 +355,10 @@ impl Entity {
     self.base.stance_millis += delta;
 
     self.data.step(&mut self.base, delta);
+
+    if let Some(ref mut collision) = self.collision {
+      collision.update_isometry(&self.base);
+    }
   }
 
   pub fn despawn(&mut self) -> bool {

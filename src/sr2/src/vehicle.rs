@@ -388,6 +388,21 @@ impl EntityData for VehicleData {
     }
   }
 
+  fn get_collision_shape(&self, entity: &EntityBase) -> Option<collision::CollisionShape> {
+    if (entity.entity_type == EntityType::Type8 ||
+        entity.entity_type == EntityType::PlayerVehicle ||
+        entity.entity_type == EntityType::MovingVehicle ||
+        entity.entity_type == EntityType::EnemyVehicle ||
+        entity.entity_type == EntityType::PoliceCar) {
+      let context = get_context();
+      let class = &context.data.classes[entity.class as usize];
+
+      Some(collision::CollisionShape::Rect(Vec3i::new2(class.width as i32, class.height as i32)))
+    } else {
+      None
+    }
+  }
+
   fn spawn(&mut self, entity: &mut EntityBase, pos: Vec3f) -> Option<Vec3f> {
     if let Some(pos) = get_road_spawn(pos) {
       entity.pos = pos;

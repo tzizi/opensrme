@@ -42,6 +42,48 @@ impl GameScreen {
     game
   }
 
+  fn handle_collision(entity1: &mut entity::Entity, entity2: Option<&mut entity::Entity>, response: Vec3f) {
+    //entity1.on_collision(entity2, response);
+    let end_pos = entity1.base.pos - response;
+    entity1.set_pos(end_pos);
+  }
+
+  fn get_entity_response(entity1: &entity::Entity, entity2: &entity::Entity) -> Option<Vec3f> {
+    if let Some(ref collision1) = entity1.collision {
+      if let Some(ref collision2) = entity2.collision {
+        return collision1.get_response_vector(collision2);
+      }
+    }
+
+    None
+  }
+
+  fn step_collision(&mut self, _delta: Time) {
+    let entities_len = self.entities.len();
+
+    for entity1_id in 0..entities_len {
+      //let entity1 = &mut self.entities[entity1_id];
+
+      if !self.entities[entity1_id].is_physical() {
+        continue;
+      }
+
+      for entity2_id in entity1_id+1..entities_len {
+        if !self.entities[entity2_id].is_physical() {
+          continue;
+        }
+
+        if let Some(response) = GameScreen::get_entity_response(&self.entities[entity1_id],
+                                                                &self.entities[entity2_id]) {
+          let mut splitted = self.entities[..].split_at_mut(entity1_id + 1);
+          let entity1 = &mut splitted.0[entity1_id];
+          let entity2 = &mut splitted.1[entity2_id - entity1_id - 1];
+          GameScreen::handle_collision(entity1, Some(entity2), response);
+        }
+      }
+    }
+  }
+
   fn process_input(&mut self) {
     let context = globals::get_context();
 
@@ -232,6 +274,8 @@ impl Screen for GameScreen {
 
       entity.step(delta);
     }
+
+    self.step_collision(delta);
   }
 
   fn draw(&mut self) {

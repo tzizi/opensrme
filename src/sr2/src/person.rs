@@ -129,6 +129,19 @@ impl EntityData for PersonData {
     entity.palette = get_palette_id(entity.entity_type);
   }
 
+  fn get_collision_shape(&self, entity: &EntityBase) -> Option<collision::CollisionShape> {
+    // FIXME: non-players are set to a circle, but without collision data.
+    // this is only used for sliding.
+    if entity.entity_type == EntityType::Player {
+      let context = get_context();
+      let class = &context.data.classes[entity.class as usize];
+
+      Some(collision::CollisionShape::Circle(class.width as i32))
+    } else {
+      None
+    }
+  }
+
   fn step(&mut self, entity: &mut EntityBase, delta: Time) {
     match entity.entity_type {
       EntityType::Type1 => {

@@ -388,7 +388,7 @@ impl EntityData for VehicleData {
     }
   }
 
-  fn get_collision_shape(&self, entity: &EntityBase) -> Option<collision::CollisionShape> {
+  fn get_collision_info(&self, entity: &EntityBase) -> Option<collision::ShapeInfo> {
     if (entity.entity_type == EntityType::Type8 ||
         entity.entity_type == EntityType::PlayerVehicle ||
         entity.entity_type == EntityType::MovingVehicle ||
@@ -397,7 +397,10 @@ impl EntityData for VehicleData {
       let context = get_context();
       let class = &context.data.classes[entity.class as usize];
 
-      Some(collision::CollisionShape::Rect(Vec3i::new2(class.width as i32, class.height as i32)))
+      Some(collision::ShapeInfo {
+        shape: collision::Shape::Rect(Vec3i::new2(class.width as i32, class.height as i32)),
+        weight: class.weight
+      })
     } else {
       None
     }

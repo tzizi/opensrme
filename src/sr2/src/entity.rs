@@ -259,7 +259,7 @@ pub struct PersonData {
 
 pub trait EntityData {
   fn init(&mut self, _entity: &mut EntityBase) {}
-  fn get_collision_shape(&self, _entity: &EntityBase) -> Option<collision::CollisionShape> { None }
+  fn get_collision_info(&self, _entity: &EntityBase) -> Option<collision::ShapeInfo> { None }
   fn spawn(&mut self, _entity: &mut EntityBase, _pos: Vec3f) -> Option<Vec3f> { None }
   fn step(&mut self, _entity: &mut EntityBase, _delta: Time) {}
   fn draw(&self, _entity: &EntityBase) {}
@@ -271,7 +271,7 @@ impl EntityData for NullEntityData {}
 
 pub struct Entity {
   pub base: EntityBase,
-  pub collision: Option<collision::EntityCollision>,
+  pub collision: Option<collision::PhysicalObject>,
   pub data: Box<EntityData>
 }
 
@@ -309,8 +309,8 @@ impl Entity {
   pub fn spawn(&mut self, pos: Vec3f) -> Option<Vec3f> {
     self.init();
 
-    if let Some(shape) = self.data.get_collision_shape(&self.base) {
-      self.collision = Some(collision::EntityCollision::new_from_shape(shape));
+    if let Some(info) = self.data.get_collision_info(&self.base) {
+      self.collision = Some(collision::PhysicalObject::new_from_info(info));
     }
 
     if let Some(pos) = self.data.spawn(&mut self.base, pos) {

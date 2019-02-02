@@ -20,6 +20,12 @@ pub struct GameScreen {
   pub entity_spawn_counter: usize
 }
 
+struct CollisionResponse {
+  response: Vec3f,
+  percent1: FScalar,
+  percent2: FScalar
+}
+
 impl GameScreen {
   pub fn new(levelid: LevelId) -> Self {
     //let context = globals::get_context();
@@ -42,16 +48,34 @@ impl GameScreen {
     game
   }
 
-  fn handle_collision(entity1: &mut entity::Entity, entity2: Option<&mut entity::Entity>, response: Vec3f) {
+  fn handle_collision(entity1: &mut entity::Entity, mut entity2: Option<&mut entity::Entity>, response: CollisionResponse) {
     //entity1.on_collision(entity2, response);
-    let end_pos = entity1.base.pos - response;
-    entity1.set_pos(end_pos);
+    if let Some(ref mut entity2) = entity2 {
+      let end_pos = entity1.base.pos - (response.response * response.percent1);
+      entity1.set_pos(end_pos);
+
+      let end_pos = entity2.base.pos + (response.response * response.percent2);
+      entity2.set_pos(end_pos);
+    } else {
+      let end_pos = entity1.base.pos - response.response;
+      entity1.set_pos(end_pos);
+    }
   }
 
-  fn get_entity_response(entity1: &entity::Entity, entity2: &entity::Entity) -> Option<Vec3f> {
+  fn get_entity_response(entity1: &entity::Entity, entity2: &entity::Entity) -> Option<CollisionResponse> {
     if let Some(ref collision1) = entity1.collision {
       if let Some(ref collision2) = entity2.collision {
-        return collision1.get_response_vector(collision2);
+        let response = collision1.get_response_vector(collision2);
+        if let Some(response) = response {
+          let total_weight = collision1.weight + collision2.weight;
+          let percent1 = collision1.weight / total_weight;
+          let percent2 = collision2.weight / total_weight;
+          return Some(CollisionResponse {
+            response,
+            percent1,
+            percent2
+          });
+        }
       }
     }
 

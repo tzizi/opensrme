@@ -457,7 +457,7 @@ fn read_classes<T: DataInputStream>(file: &mut T) -> io::Result<Vec<EntityClass>
     let entity_type = file.readInt()?;
     let clip = file.readInt()?;
     let health = file.read_short()?;
-    let unk1 = file.readInt()?;
+    let weight = file.readInt()?;
     let width = (file.readInt()? as FScalar) / 65536.0;
     let height = (file.readInt()? as FScalar) / 65536.0;
     let unk2 = file.readInt()?;
@@ -467,7 +467,7 @@ fn read_classes<T: DataInputStream>(file: &mut T) -> io::Result<Vec<EntityClass>
       entity_type,
       clip,
       health,
-      unk1,
+      weight,
       width,
       height,
       unk2,

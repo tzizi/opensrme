@@ -2,15 +2,21 @@ use super::*;
 use ncollide2d::query::PointQuery;
 use std::sync::Arc;
 
-pub enum CollisionShape {
+pub enum Shape {
   Rect(Vec3i),
   Circle(IScalar)
 }
 
+pub struct ShapeInfo {
+  pub shape: Shape,
+  pub weight: IScalar
+}
+
 // TODO: weight
-pub struct EntityCollision {
+pub struct PhysicalObject {
   pub shape: Arc<ncollide2d::shape::Shape<FScalar>>,
   pub isometry: nalgebra::Isometry2<FScalar>,
+  pub weight: FScalar
 }
 
 fn vec_to_navec(vec: Vec3f) -> nalgebra::Vector2<FScalar> {
@@ -34,20 +40,21 @@ fn navec_to_vec(vec: nalgebra::Vector2<FScalar>) -> Vec3f {
   )
 }
 
-impl EntityCollision {
-  pub fn new_from_shape(shape: CollisionShape) -> Self {
-    let shape: Arc<ncollide2d::shape::Shape<FScalar>> = match shape {
-      CollisionShape::Rect(vec) => {
+impl PhysicalObject {
+  pub fn new_from_info(info: ShapeInfo) -> Self {
+    let shape: Arc<ncollide2d::shape::Shape<FScalar>> = match info.shape {
+      Shape::Rect(vec) => {
         Arc::new(ncollide2d::shape::Cuboid::new(vec_to_navec(vec.into())))
       },
-      CollisionShape::Circle(radius) => {
+      Shape::Circle(radius) => {
         Arc::new(ncollide2d::shape::Ball::new(radius.into()))
       }
     };
 
-    EntityCollision {
+    PhysicalObject {
       shape,
-      isometry: nalgebra::Isometry2::<FScalar>::identity()
+      isometry: nalgebra::Isometry2::<FScalar>::identity(),
+      weight: 1. / info.weight as FScalar
     }
   }
 
@@ -59,14 +66,14 @@ impl EntityCollision {
 
   pub fn update_isometry(&mut self, base: &entity::EntityBase) {
     // TODO: only update if needed
-    self.isometry = EntityCollision::get_isometry(base);
+    self.isometry = PhysicalObject::get_isometry(base);
   }
 
   pub fn point_inside(&self, point: Vec3f) -> bool {
     self.shape.contains_point(&self.isometry, &vec_to_napoint(point))
   }
 
-  pub fn get_response_vector(&self, other: &EntityCollision) -> Option<Vec3f> {
+  pub fn get_response_vector(&self, other: &PhysicalObject) -> Option<Vec3f> {
     let contact = ncollide2d::query::contact(&self.isometry, &(*self.shape),
                                              &other.isometry, &(*other.shape),
                                              0.0);
@@ -78,7 +85,7 @@ impl EntityCollision {
     }
   }
 
-  pub fn collides_with(&self, other: &EntityCollision) -> bool {
+  pub fn collides_with(&self, other: &PhysicalObject) -> bool {
     let proximity = ncollide2d::query::proximity(&self.isometry, &(*self.shape),
                                                  &other.isometry, &(*other.shape),
                                                  0.0);

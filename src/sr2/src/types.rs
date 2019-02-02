@@ -235,7 +235,7 @@ pub struct EntityClass {
   pub entity_type: i32,
   pub clip: ClipId,
   pub health: i16,
-  pub unk1: i32,
+  pub weight: i32,
   pub width: FScalar,
   pub height: FScalar,
   pub unk2: i32,

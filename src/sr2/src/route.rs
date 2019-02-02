@@ -47,7 +47,7 @@ impl Route {
 
   pub fn get_angle_at_point(&self, position: FScalar) -> Option<Angle> {
     if let Some(part_id) = self.get_part_id_for_position(position) {
-      Some(util::vec_angle(self.parts[part_id].pos -self.parts[part_id - 1].pos))
+      Some(util::vec_angle(self.parts[part_id].pos - self.parts[part_id - 1].pos))
     } else {
       None
     }

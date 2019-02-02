@@ -273,6 +273,39 @@ fn get_road_spawn(pos: Vec3f) -> Option<Vec3f> {
   None
 }
 
+fn find_angle_to_road(tilepos: Vec3i) -> Option<Angle> {
+  let game = globals::get_game();
+
+  for sign_x in 0..2 {
+    for search_x in 0..2 {
+      let mut tile_x = search_x + 1;
+      if sign_x == 0 {
+        tile_x = -tile_x;
+      }
+
+      for sign_y in 0..2 {
+        for search_y in 0..2 {
+          let mut tile_y = search_y + 1;
+          if sign_y == 0 {
+            tile_y = -tile_y;
+          }
+
+          let mut pos = tilepos;
+          pos.x += tile_x;
+          pos.y += tile_y;
+
+          let tiledata = level::get_tiledata_for_tilepos(&game.level, pos.into());
+          if is_road(tiledata) {
+            return Some(util::vec_angle((pos - tilepos).into()))
+          }
+        }
+      }
+    }
+  }
+
+  None
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct VehicleData {
   last_tiledata: LevelTileData,
@@ -311,6 +344,14 @@ impl VehicleData {
           }
 
           self.last_tiledata = tiledata;
+        }
+      } else if let Some(angle) = find_angle_to_road(level::pos_to_tilepos(entity.pos)) {
+        let turn_amount = get_turn_amount(entity, delta, angle);
+        if turn_amount != 0. {
+          self.wanted_speed = 25.;
+          entity.angle += turn_amount;
+        } else {
+          self.wanted_speed = 50.;
         }
       }
 

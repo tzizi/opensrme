@@ -2,19 +2,23 @@ use super::*;
 use ncollide2d::query::PointQuery;
 use std::sync::Arc;
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Shape {
   Rect(Vec3i),
   Circle(IScalar)
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct ShapeInfo {
   pub shape: Shape,
   pub weight: IScalar
 }
 
 // TODO: weight
+#[derive(Clone)]
 pub struct PhysicalObject {
-  pub shape: Arc<ncollide2d::shape::Shape<FScalar>>,
+  pub nashape: Arc<ncollide2d::shape::Shape<FScalar>>,
+  pub shape: Shape,
   pub isometry: nalgebra::Isometry2<FScalar>,
   pub weight: FScalar
 }
@@ -52,16 +56,32 @@ impl PhysicalObject {
     };
 
     PhysicalObject {
-      shape,
+      nashape: shape,
+      shape: info.shape,
       isometry: nalgebra::Isometry2::<FScalar>::identity(),
       weight: 1. / info.weight as FScalar
     }
   }
 
+  pub fn clone_with_isometry(&self, isometry: nalgebra::Isometry2<FScalar>) -> Self {
+    let mut new = self.clone();
+    new.isometry = isometry;
+
+    new
+  }
+
+  pub fn clone_with_pa(&self, pos: Vec3f, angle: Angle) -> Self {
+    self.clone_with_isometry(PhysicalObject::create_isometry(pos, angle))
+  }
+
+  pub fn create_isometry(pos: Vec3f, angle: Angle) -> nalgebra::Isometry2<FScalar> {
+    nalgebra::Isometry2::<FScalar>::new(vec_to_navec(pos), angle)
+  }
+
   pub fn get_isometry(base: &entity::EntityBase) -> nalgebra::Isometry2<FScalar> {
     // TODO: not base.angle, but base.visible_angle
     // for example, a vehicle could be rotated at 15 degrees, but displayed as 0 degrees
-    nalgebra::Isometry2::<FScalar>::new(vec_to_navec(base.pos), base.angle)
+    PhysicalObject::create_isometry(base.pos, base.angle)
   }
 
   pub fn update_isometry(&mut self, base: &entity::EntityBase) {
@@ -70,12 +90,20 @@ impl PhysicalObject {
   }
 
   pub fn point_inside(&self, point: Vec3f) -> bool {
-    self.shape.contains_point(&self.isometry, &vec_to_napoint(point))
+    self.nashape.contains_point(&self.isometry, &vec_to_napoint(point))
+  }
+
+  pub fn pos(&self) -> Vec3f {
+    navec_to_vec(self.isometry.translation.vector)
+  }
+
+  pub fn angle(&self) -> Angle {
+    self.isometry.rotation.angle()
   }
 
   pub fn get_response_vector(&self, other: &PhysicalObject) -> Option<Vec3f> {
-    let contact = ncollide2d::query::contact(&self.isometry, &(*self.shape),
-                                             &other.isometry, &(*other.shape),
+    let contact = ncollide2d::query::contact(&self.isometry, &(*self.nashape),
+                                             &other.isometry, &(*other.nashape),
                                              0.0);
 
     if let Some(contact) = contact {
@@ -86,8 +114,8 @@ impl PhysicalObject {
   }
 
   pub fn collides_with(&self, other: &PhysicalObject) -> bool {
-    let proximity = ncollide2d::query::proximity(&self.isometry, &(*self.shape),
-                                                 &other.isometry, &(*other.shape),
+    let proximity = ncollide2d::query::proximity(&self.isometry, &(*self.nashape),
+                                                 &other.isometry, &(*other.nashape),
                                                  0.0);
 
     proximity == ncollide2d::query::Proximity::Intersecting

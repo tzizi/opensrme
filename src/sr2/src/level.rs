@@ -322,3 +322,9 @@ pub fn pos_is_sidewalk(level: &Level, pos: Vec3f) -> bool {
 
   tiledata == 9 || tiledata == 36
 }
+
+pub fn tilepos_is_impassable(level: &Level, tilepos: Vec3i) -> bool {
+  let tiledata = get_tiledata_for_tilepos(level, tilepos);
+
+  tiledata == 1 || tiledata == 2 || tiledata == 3 || tiledata == 4
+}

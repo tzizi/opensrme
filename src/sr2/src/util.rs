@@ -9,6 +9,8 @@ pub const HALF_PI: Angle = PI / 2.;
 pub const TWO_PI: Angle = PI * 2.;
 pub const NAN: f64 = std::f64::NAN;
 
+pub const TILESIZE: i32 = 24;
+
 pub mod angles {
   use super::*;
 

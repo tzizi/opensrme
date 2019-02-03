@@ -273,6 +273,10 @@ fn get_road_spawn(pos: Vec3f) -> Option<Vec3f> {
   None
 }
 
+// not in the original game
+// TODO:
+//   start with the tile closest to the angle of the car
+//   find all nearest blocks first
 fn find_angle_to_road(tilepos: Vec3i) -> Option<Angle> {
   let game = globals::get_game();
 
@@ -346,6 +350,7 @@ impl VehicleData {
           self.last_tiledata = tiledata;
         }
       } else if let Some(angle) = find_angle_to_road(level::pos_to_tilepos(entity.pos)) {
+        // TODO: merge these "turn amount" functions to avoid code duplication with above
         let turn_amount = get_turn_amount(entity, delta, angle);
         if turn_amount != 0. {
           self.wanted_speed = 25.;

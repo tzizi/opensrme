@@ -82,6 +82,76 @@ impl GameScreen {
     None
   }
 
+  fn create_tile_object() -> collision::PhysicalObject {
+    collision::PhysicalObject::new_from_info(collision::ShapeInfo {
+      shape: collision::Shape::Rect(Vec3i::new2(util::TILESIZE, util::TILESIZE)),
+      weight: 1
+    })
+  }
+
+  fn check_tile_collision_inner(level: &Level, entity: &mut entity::Entity, collision: collision::PhysicalObject) -> bool {
+    // TODO: make static
+    let tile = GameScreen::create_tile_object();
+
+    let radius = match collision.shape {
+      collision::Shape::Circle(radius) => radius,
+      collision::Shape::Rect(vec) => vec.len2().ceil() as IScalar
+    };
+
+    let pos = collision.pos();
+
+    let start = level::pos_to_tilepos(pos - radius as FScalar);
+    let end   = level::pos_to_tilepos(pos + radius as FScalar);
+
+    let mut ret = false;
+
+    for x in start.x..=end.x {
+      for y in start.y..=end.y {
+        let newpos = Vec3i::new2(x, y);
+        if level::tilepos_is_impassable(level, newpos) {
+          let newtile = tile.clone_with_pa(level::tilepos_to_pos(newpos) + (util::TILESIZE / 2) as FScalar, 0.);
+          if let Some(response) = collision.get_response_vector(&newtile) {
+            GameScreen::handle_collision(entity, None, CollisionResponse {
+              response,
+              percent1: 1.,
+              percent2: 0.
+            });
+
+            ret = true;
+          }
+        }
+      }
+    }
+
+    ret
+  }
+
+  fn check_tile_collision(level: &Level, entity: &mut entity::Entity) -> bool {
+    let collision = if let Some(ref collision1) = entity.collision {
+      // clone to avoid reference problems
+      collision1.clone()
+    } else {
+      return false;
+    };
+
+    let prevpos = entity.base.prev_pos;
+    let pos = entity.base.pos;
+    let diff = pos - prevpos;
+    let amount = (diff.abs().max2() as IScalar) / (util::TILESIZE / 4);
+
+    if amount > 1 {
+      for i in 0..amount {
+        // TODO: interpolate between angles? not in original game
+        let newcollision = collision.clone_with_pa(entity.base.pos + (diff * i as FScalar) / amount as FScalar, entity.base.angle);
+        if GameScreen::check_tile_collision_inner(level, entity, newcollision) {
+          return true;
+        }
+      }
+    }
+
+    return GameScreen::check_tile_collision_inner(level, entity, collision);
+  }
+
   fn step_collision(&mut self, _delta: Time) {
     let entities_len = self.entities.len();
 
@@ -105,6 +175,8 @@ impl GameScreen {
           GameScreen::handle_collision(entity1, Some(entity2), response);
         }
       }
+
+      GameScreen::check_tile_collision(&self.level, &mut self.entities[entity1_id]);
     }
   }
 

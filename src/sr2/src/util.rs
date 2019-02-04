@@ -137,3 +137,10 @@ pub fn get_frame_in_clip(time: Time, total_length: usize, length: usize) -> usiz
   //(time as usize / total_length) % length
   (time as usize * length) / total_length % length
 }
+
+pub fn cossin(angle: Angle) -> Vec3f {
+  Vec3f::new2(
+    angle.cos(),
+    angle.sin()
+  )
+}

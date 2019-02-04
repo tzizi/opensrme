@@ -137,6 +137,7 @@ impl EntityGender {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EntityBase {
+  pub id: EntityId,
   pub class: ClassId,
   pub entity_type: EntityType,
   pub pos: Vec3f,
@@ -160,10 +161,11 @@ pub struct EntityBase {
 }
 
 impl EntityBase {
-  pub fn new(class: ClassId) -> Self {
+  pub fn new(id: EntityId, class: ClassId) -> Self {
     let context = get_context();
 
     EntityBase {
+      id,
       class,
       entity_type: get_entitytype(context.data.classes[class as usize].entity_type),
       pos: Vec3f::new2(0., 0.),
@@ -187,7 +189,7 @@ impl EntityBase {
   }
 
   pub fn init(&mut self) {
-    *self = EntityBase::new(self.class);
+    *self = EntityBase::new(self.id, self.class);
   }
 
   pub fn update_prev(&mut self) {
@@ -286,8 +288,8 @@ fn create_entity_data(entity_type: EntityType) -> Box<EntityData> {
 }
 
 impl Entity {
-  pub fn new(class: ClassId) -> Self {
-    let base = EntityBase::new(class);
+  pub fn new(id: EntityId, class: ClassId) -> Self {
+    let base = EntityBase::new(id, class);
     let data = create_entity_data(base.entity_type);
 
     let mut entity = Entity {

@@ -61,6 +61,10 @@ fn is_road(tiledata: LevelTileData) -> bool {
   tiledata >= 10 && tiledata <= 29
 }
 
+fn is_road_or_0(tiledata: LevelTileData) -> bool {
+  is_road(tiledata) || tiledata == 0
+}
+
 fn is_one_way_road(tiledata: LevelTileData) -> bool {
   tiledata >= 10 && tiledata <= 17
 }
@@ -153,27 +157,46 @@ const road_rules: [[[bool; 8]; 2]; 12] = [
   [ w_rule, n_rule ]
 ];
 
-fn can_move_on_road(tiledata: LevelTileData, last_tiledata: LevelTileData, trafficlight: TrafficLight) -> bool {
+// TODO: split into multiple functions like in original game
+fn can_move_on_road(entity: &EntityBase, angle: Angle, last_tiledata: LevelTileData, trafficlight: TrafficLight) -> (bool, i8) {
+  let amount = 3 * (entity.get_class().width as IScalar) >> 1;
+  let wanted_pos = entity.pos + util::cossin(angle) * (amount as FScalar);
+  let level = &globals::get_game().level;
+  let wanted_tiledata = level::get_tiledata_for_pos(level, wanted_pos);
+
+  if !is_point_free(entity, wanted_pos) {
+    return (false, wanted_tiledata);
+  }
+
   if !is_road(last_tiledata) {
-    return true;
+    return (true, wanted_tiledata);
   }
 
-  if is_one_way_road(tiledata) {
-    return true;
+  if is_one_way_road(wanted_tiledata) {
+    return (true, wanted_tiledata);
   }
 
+  // same as is_intersection
   if !is_one_way_road(last_tiledata) {
-    return true;
+    return (true, wanted_tiledata);
   }
 
   if !trafficlight.is_green() {
-    return false;
+    return (false, wanted_tiledata);
   }
 
-  let roaddata: usize = tiledata as usize - 10 - 8;
+  if wanted_tiledata < 18 {
+    return (false, wanted_tiledata);
+  }
+
+  let wanted_roaddata: usize = wanted_tiledata as usize - 10 - 8;
   let last_roaddata: usize = last_tiledata as usize - 10;
 
-  road_rules[roaddata][trafficlight.index()][last_roaddata]
+  if !road_rules[wanted_roaddata][trafficlight.index()][last_roaddata] {
+    return (false, wanted_tiledata);
+  }
+
+  (true, wanted_tiledata)
 }
 
 fn get_lane(tilepos: Vec3i) -> Option<Vec3i> {
@@ -212,25 +235,30 @@ fn get_lane(tilepos: Vec3i) -> Option<Vec3i> {
 
 fn get_road_middle(pos: Vec3f) -> Option<Vec3f> {
   let tilepos = pos_to_tilepos(pos);
+  let pos_tilepos = tilepos_to_pos(tilepos);
 
   let lane = get_lane(tilepos);
   if let Some(lane) = lane {
-    if lane.x <= 0 && lane.y <= 0 {
+    /*if lane.x <= 0 && lane.y <= 0 {
       //return None;
       return Some(tilepos_to_pos(tilepos));
-    }
+    }*/
 
-    let mut tilepos = tilepos;
+    let mut newpos = pos;
 
     if lane.x > 0 {
-      tilepos.x = tilepos.x + 1;
+      newpos.x = pos_tilepos.x + util::TILESIZE as FScalar;
+    } else if lane.x < 0 {
+      newpos.x = pos_tilepos.x;
     }
 
     if lane.y > 0 {
-      tilepos.y = tilepos.y + 1;
+      newpos.y = newpos.y + util::TILESIZE as FScalar;
+    } else if lane.y < 0 {
+      newpos.y = pos_tilepos.y;
     }
 
-    Some(tilepos_to_pos(tilepos))
+    Some(newpos)
   } else {
     None
   }
@@ -254,7 +282,13 @@ fn move_to_middle_of_road(entity: &EntityBase, delta: Time) -> Vec3f {
     //println!("{:?}", road_middle - entity.pos);
     let diff = road_middle - entity.pos;
     let diff_len = diff.len2();
-    util::interpolate_vec(entity.pos, road_middle, 0., diff_len, util::fmin(diff_len, 10. * (delta as FScalar / 1000.)))
+    let result = util::interpolate_vec(entity.pos, road_middle, 0., diff_len, util::fmin(diff_len, 10. * (delta as FScalar / 1000.)));
+
+    if (result - road_middle).len2() < 1. {
+      road_middle
+    } else {
+      result
+    }
   } else {
     entity.pos
   }
@@ -271,6 +305,29 @@ fn get_road_spawn(pos: Vec3f) -> Option<Vec3f> {
   }
 
   None
+}
+
+fn is_point_free(self_entity: &EntityBase, point: Vec3f) -> bool {
+  let game = globals::get_game();
+
+  for entity in game.entities.iter() {
+    if entity.base.id != self_entity.id && !entity.base.hidden {
+      if (entity.base.entity_type == EntityType::Type8 ||
+          entity.base.entity_type == EntityType::PlayerVehicle ||
+          entity.base.entity_type == EntityType::MovingVehicle ||
+          entity.base.entity_type == EntityType::PoliceCar) {
+        if (point - entity.base.pos).abs().max2() < entity.get_class().width {
+          return false;
+        }
+      } else if entity.base.entity_type == EntityType::Player {
+        if (point - entity.base.pos).abs().max2() < self_entity.get_class().height {
+          return false;
+        }
+      }
+    }
+  }
+
+  true
 }
 
 // not in the original game
@@ -329,14 +386,15 @@ impl VehicleData {
 
     self.wanted_speed = 0.;
 
-    if entity.stance == EntityStance::Running || true {
+    if entity.stance == EntityStance::Running {
       let game = globals::get_game();
 
       let tiledata = level::get_tiledata_for_pos(&game.level, entity.pos);
 
       let road_direction = get_road_direction(tiledata, game.vehicle_state.trafficlight);
       if let Some(road_direction) = road_direction {
-        if can_move_on_road(tiledata, self.last_tiledata, game.vehicle_state.trafficlight) {
+        let (can_move, new_tiledata) = can_move_on_road(entity, road_direction, self.last_tiledata, game.vehicle_state.trafficlight);
+        if can_move {
           self.wanted_speed = 25.;
 
           let turn_amount = get_turn_amount(entity, delta, road_direction);
@@ -347,7 +405,7 @@ impl VehicleData {
             entity.angle += turn_amount;
           }
 
-          self.last_tiledata = tiledata;
+          self.last_tiledata = new_tiledata;
         }
       } else if let Some(angle) = find_angle_to_road(level::pos_to_tilepos(entity.pos)) {
         // TODO: merge these "turn amount" functions to avoid code duplication with above
@@ -380,6 +438,10 @@ impl VehicleData {
 
   fn move_vehicle(&mut self, entity: &mut EntityBase, delta: Time) {
     self.accelerate_to_wanted_speed(entity, delta);
+    if entity.speed == 0. {
+      return;
+    }
+
     entity.move_forward(delta);
     // TODO: calculate skidmarks
   }
@@ -453,6 +515,10 @@ impl EntityData for VehicleData {
   }
 
   fn spawn(&mut self, entity: &mut EntityBase, pos: Vec3f) -> Option<Vec3f> {
+    if !is_point_free(entity, pos) {
+      return None;
+    }
+
     if let Some(pos) = get_road_spawn(pos) {
       entity.pos = pos;
     } else {
@@ -462,11 +528,19 @@ impl EntityData for VehicleData {
     let game = globals::get_game();
     let tiledata = level::get_tiledata_for_pos(&game.level, entity.pos);
 
+    entity.pos = move_to_middle_of_road(entity, 1000);
+
     if let Some(direction) = get_road_direction(tiledata, game.vehicle_state.trafficlight) {
       entity.angle = direction;
     }
 
+    self.last_tiledata = tiledata;
+    if !can_move_on_road(entity, entity.angle, tiledata, game.vehicle_state.trafficlight).0 {
+      return None;
+    }
+
     entity.hidden = false;
+    entity.stance = EntityStance::Running;
 
     Some(entity.pos)
   }

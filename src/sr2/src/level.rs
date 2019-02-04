@@ -176,8 +176,10 @@ pub fn load_images(levelid: LevelId) {
 pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
   let mut entities = vec![];
 
+  let mut id = 0;
   for level_entity in level.entities.iter() {
-    let mut entity = entity::Entity::new(level_entity.class);
+    let mut entity = entity::Entity::new(id, level_entity.class);
+    id += 1;
     entity.base.pos = level_entity.pos.into();
 
     if level_entity.route != -1 {

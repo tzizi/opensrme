@@ -92,6 +92,13 @@ pub enum EntityStance {
   Unknown = 10
 }
 
+impl EntityStance {
+  pub fn is_self_moving(&self) -> bool {
+    (*self == EntityStance::Walking ||
+     *self == EntityStance::Running)
+  }
+}
+
 pub fn get_entitytype(number: i32) -> EntityType {
   match number {
     1 => EntityType::Type1,
@@ -197,16 +204,20 @@ impl EntityBase {
     self.prev_angle = self.angle;
   }
 
-  pub fn move_forward(&mut self, delta: Time) {
+  pub fn strafe(&mut self, angle: Angle, delta: Time) {
     if self.speed == 0. {
       return;
     }
 
     let amount = (delta as FScalar) / 1000. * self.speed;
-    self.pos.x += amount * self.angle.cos();
-    self.pos.y += amount * self.angle.sin();
+    self.pos.x += amount * (self.angle + angle).cos();
+    self.pos.y += amount * (self.angle + angle).sin();
 
     self.update_pos();
+  }
+
+  pub fn move_forward(&mut self, delta: Time) {
+    self.strafe(0., delta);
   }
 
   pub fn get_class(&self) -> &EntityClass {
@@ -253,12 +264,6 @@ impl EntityBase {
   }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct PersonData {
-  pub walking_direction: Vec3f,
-  pub walking_angle: Angle
-}
-
 pub trait EntityData {
   fn init(&mut self, _entity: &mut EntityBase) {}
   fn get_collision_info(&self, _entity: &EntityBase) -> Option<collision::ShapeInfo> { None }
@@ -279,7 +284,7 @@ pub struct Entity {
 
 fn create_entity_data(entity_type: EntityType) -> Box<EntityData> {
   if entity_type.is_person() {
-    return Box::new(person::PersonData::new());
+    return Box::new(person::PersonData::new(entity_type));
   } else if entity_type.is_vehicle() {
     return Box::new(vehicle::VehicleData::new());
   }
@@ -308,15 +313,18 @@ impl Entity {
     self.data.init(&mut self.base);
   }
 
-  pub fn spawn(&mut self, pos: Vec3f) -> Option<Vec3f> {
-    self.init();
-
+  pub fn after_init(&mut self) {
     if let Some(info) = self.data.get_collision_info(&self.base) {
       self.collision = Some(collision::PhysicalObject::new_from_info(info));
     }
+  }
+
+  pub fn spawn(&mut self, pos: Vec3f) -> Option<Vec3f> {
+    self.init();
 
     if let Some(pos) = self.data.spawn(&mut self.base, pos) {
       self.set_pos(pos);
+      self.after_init();
       Some(pos)
     } else {
       None

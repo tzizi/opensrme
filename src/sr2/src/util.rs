@@ -14,6 +14,7 @@ pub const TILESIZE: i32 = 24;
 pub mod angles {
   use super::*;
 
+  // absolute angles
   pub const ANGLE_E: Angle = 0.;
   pub const ANGLE_SE: Angle = QUARTER_PI;
   pub const ANGLE_S: Angle = HALF_PI;
@@ -22,6 +23,16 @@ pub mod angles {
   pub const ANGLE_NW: Angle = PI + QUARTER_PI;
   pub const ANGLE_N: Angle = PI + HALF_PI;
   pub const ANGLE_NE: Angle = PI + HALF_PI + QUARTER_PI;
+
+  // relative angles
+  pub const RANGLE_E: Angle = HALF_PI;
+  pub const RANGLE_SE: Angle = HALF_PI + QUARTER_PI;
+  pub const RANGLE_S: Angle = PI;
+  pub const RANGLE_SW: Angle = PI + QUARTER_PI;
+  pub const RANGLE_W: Angle = PI + HALF_PI;
+  pub const RANGLE_NW: Angle = PI + HALF_PI + QUARTER_PI;
+  pub const RANGLE_N: Angle = 0.;
+  pub const RANGLE_NE: Angle = QUARTER_PI;
 }
 
 

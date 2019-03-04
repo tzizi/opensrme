@@ -180,7 +180,7 @@ pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
   for level_entity in level.entities.iter() {
     let mut entity = entity::Entity::new(id, level_entity.class);
     id += 1;
-    entity.base.pos = level_entity.pos.into();
+    entity.set_pos(level_entity.pos.into());
 
     if level_entity.route != -1 {
       entity.base.route.routeid = Some(level_entity.route);

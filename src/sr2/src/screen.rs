@@ -10,6 +10,7 @@ pub trait Screen {
 pub struct GameScreen {
   pub level: Level,
   pub levelid: LevelId,
+  pub playercontroller: Box<controller::PlayerController>,
   pub entities: Vec<entity::Entity>,
   pub entity_ids: Vec<EntityId>,
   pub main_camera_pos: Vec3i,
@@ -33,6 +34,7 @@ impl GameScreen {
     let mut game = GameScreen {
       level: level::get_level_from_levelid(levelid),
       levelid,
+      playercontroller: Box::new(controller::ModernPlayerControls::new()),
       entities: vec![],
       entity_ids: vec![],
       main_camera_pos: Vec3i::default(),
@@ -84,7 +86,7 @@ impl GameScreen {
 
   fn create_tile_object() -> collision::PhysicalObject {
     collision::PhysicalObject::new_from_info(collision::ShapeInfo {
-      shape: collision::Shape::Rect(Vec3i::new2(util::TILESIZE, util::TILESIZE)),
+      shape: collision::Shape::Rect(Vec3i::new2(util::TILESIZE / 2, util::TILESIZE / 2)),
       weight: 1
     })
   }
@@ -109,7 +111,11 @@ impl GameScreen {
       for y in start.y..=end.y {
         let newpos = Vec3i::new2(x, y);
         if level::tilepos_is_impassable(level, newpos) {
-          let newtile = tile.clone_with_pa(level::tilepos_to_pos(newpos) + (util::TILESIZE / 2) as FScalar, 0.);
+          let mut tile_gamepos = level::tilepos_to_pos(newpos);
+          tile_gamepos.x += (util::TILESIZE / 2) as FScalar;
+          tile_gamepos.y += (util::TILESIZE / 2) as FScalar;
+
+          let newtile = tile.clone_with_pa(tile_gamepos, 0.);
           if let Some(response) = collision.get_response_vector(&newtile) {
             GameScreen::handle_collision(entity, None, CollisionResponse {
               response,
@@ -178,6 +184,10 @@ impl GameScreen {
 
       GameScreen::check_tile_collision(&self.level, &mut self.entities[entity1_id]);
     }
+  }
+
+  pub fn screen_pos_to_game_pos(&self, screenpos: Vec3i) -> Vec3f {
+    (Vec3f::from(screenpos) / self.scale) - Vec3f::from(self.main_camera_pos)
   }
 
   fn process_input(&mut self) {
@@ -349,8 +359,13 @@ impl Screen for GameScreen {
     for i in 1..4 {
       image::load_image(13, i);
     }
+
     self.entities = level::load_entities(&self.level);
     self.create_entity_ids();
+
+    for entity in self.entities.iter_mut() {
+      entity.after_init();
+    }
   }
 
   fn step(&mut self, delta: Time) {

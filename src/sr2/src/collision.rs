@@ -14,7 +14,6 @@ pub struct ShapeInfo {
   pub weight: IScalar
 }
 
-// TODO: weight
 #[derive(Clone)]
 pub struct PhysicalObject {
   pub nashape: Arc<ncollide2d::shape::Shape<FScalar>>,

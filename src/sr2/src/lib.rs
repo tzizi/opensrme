@@ -19,6 +19,7 @@ mod vehicle;
 mod person;
 mod collision;
 mod entity;
+mod controller;
 mod route;
 mod util;
 mod input;

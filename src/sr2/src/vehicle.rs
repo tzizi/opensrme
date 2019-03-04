@@ -176,8 +176,7 @@ fn can_move_on_road(entity: &EntityBase, angle: Angle, last_tiledata: LevelTileD
     return (true, wanted_tiledata);
   }
 
-  // same as is_intersection
-  if !is_one_way_road(last_tiledata) {
+  if is_intersection(last_tiledata) {
     return (true, wanted_tiledata);
   }
 
@@ -185,8 +184,8 @@ fn can_move_on_road(entity: &EntityBase, angle: Angle, last_tiledata: LevelTileD
     return (false, wanted_tiledata);
   }
 
-  if wanted_tiledata < 18 {
-    return (false, wanted_tiledata);
+  if !is_road(wanted_tiledata) {
+    return (true, wanted_tiledata);
   }
 
   let wanted_roaddata: usize = wanted_tiledata as usize - 10 - 8;

@@ -59,14 +59,19 @@ impl ModernPlayerControls {
     ModernPlayerControls {}
   }
 
-  fn get_angle_from_mouse(player: &entity::Entity, context: &globals::Context) -> Angle {
+  fn get_angle_from_mouse(player: &entity::Entity, context: &globals::Context) -> Option<Angle> {
     //let middle_delta = context.input.mouse - (context.platform.get_size() / 2);
     let game = globals::get_game();
 
     //let mouse_ingame_pos = context.input.mouse - game.main_camera_pos;
     let mouse_ingame_pos = game.screen_pos_to_game_pos(context.input.mouse);
     let middle_delta = mouse_ingame_pos - player.base.pos;
-    util::vec_angle(middle_delta / 2.)
+
+    if middle_delta.len2() < player.base.get_class().width / 2. {
+      None
+    } else {
+      Some(util::vec_angle(middle_delta / 2.))
+    }
   }
 }
 
@@ -75,15 +80,23 @@ impl PlayerController for ModernPlayerControls {
     let context = globals::get_context();
     let player = &mut globals::get_game().entities[0];
 
-    player.base.angle = ModernPlayerControls::get_angle_from_mouse(player, context);
+    let angle = ModernPlayerControls::get_angle_from_mouse(player, context);
+    let has_angle = angle.is_some();
+    if let Some(angle) = angle {
+      player.base.angle = angle;
+    }
 
-    // TODO implement sliding
+      // TODO implement sliding
 
     if (player.base.stance == entity::EntityStance::Standing ||
         player.base.stance == entity::EntityStance::Aiming ||
         player.base.stance == entity::EntityStance::Walking ||
         player.base.stance == entity::EntityStance::Running) {
-      let movement_direction = get_movement_direction(context);
+      let mut movement_direction = None;
+      if has_angle {
+        movement_direction = get_movement_direction(context);
+      }
+
       if let Some(movement_direction) = movement_direction {
         player.base.speed = person::PLAYER_SPEED;
         player.base.set_new_stance(entity::EntityStance::Running);

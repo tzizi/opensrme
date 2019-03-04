@@ -141,7 +141,7 @@ pub fn interpolate_vec<T: Add<Output=T>+Sub<Output=T>+Mul<Output=T>+Div<Output=T
 }
 
 pub fn get_angle_in_clip(angle: Angle, length: usize) -> usize {
-  ((normalize_angle(angle) / TWO_PI) * length as Angle) as usize
+  (((normalize_angle(angle) / TWO_PI) * length as Angle).round() as usize) % length
 }
 
 pub fn get_frame_in_clip(time: Time, total_length: usize, length: usize) -> usize {

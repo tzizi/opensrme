@@ -15,7 +15,7 @@ pub struct GameScreen {
   pub playercontroller: Box<controller::PlayerController>,
   pub entities: Vec<entity::Entity>,
   pub entity_ids: Vec<EntityId>,
-  pub main_camera_pos: Vec3i,
+  pub main_camera_pos: Vec3f,
   pub camera: Camera,
   pub scale: FScalar,
 
@@ -41,7 +41,7 @@ impl GameScreen {
       playercontroller: Box::new(controller::ModernPlayerControls::new()),
       entities: vec![],
       entity_ids: vec![],
-      main_camera_pos: Vec3i::default(),
+      main_camera_pos: Vec3f::default(),
       camera: Camera::default(),
       scale: 1.,
 
@@ -196,7 +196,7 @@ impl GameScreen {
   }
 
   pub fn screen_pos_to_game_pos(&self, screenpos: Vec3i) -> Vec3f {
-    (Vec3f::from(screenpos) / self.scale) - Vec3f::from(self.main_camera_pos)
+    (Vec3f::from(screenpos) / self.scale) - self.main_camera_pos
   }
 
   fn process_input(&mut self) {
@@ -217,11 +217,11 @@ impl GameScreen {
     }
 
     if context.input.buttons.get(&MouseButton::Left).is_some() {
-      self.main_camera_pos = self.main_camera_pos + Vec3i::from(Vec3f::from(context.input.mouse_delta) / self.scale);
+      self.main_camera_pos = self.main_camera_pos + Vec3f::from(context.input.mouse_delta) / self.scale;
     }
 
     if context.input.buttons.get(&MouseButton::Right).is_some() {
-      self.camera.pos = Vec3i::from(Vec3f::from(context.input.mouse) / self.scale) - self.main_camera_pos - (self.camera.size / 2);
+      self.camera.pos = Vec3i::from(Vec3f::from(context.input.mouse) / self.scale - self.main_camera_pos) - self.camera.size / 2;
     }
 
     if context.input.mouse_scroll != 0 {
@@ -231,7 +231,7 @@ impl GameScreen {
         self.scale = 0.1;
       }
       let newpos = Vec3i::from(Vec3f::from(context.input.mouse) / self.scale);
-      self.main_camera_pos = self.main_camera_pos + (newpos - oldpos);
+      self.main_camera_pos = self.main_camera_pos + Vec3f::from(newpos - oldpos);
     }
   }
 
@@ -411,7 +411,7 @@ impl Screen for GameScreen {
     context.platform.clear();
     context.platform.reset();
 
-    context.platform.translate(self.main_camera_pos);
+    context.platform.translate(Vec3i::from(self.main_camera_pos));
     context.platform.scale(self.scale);
     //context.platform.draw_region(&image, 0, 0, x, x, 0, None, 50, 10);
 

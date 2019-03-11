@@ -22,6 +22,24 @@ pub fn load_font(fontid: FontId) -> PlatformId {
   imageid
 }
 
+pub fn text_size(fontid: FontId, text: &str) -> Vec3i {
+  let context = globals::get_context();
+  let font = &context.data.fonts[fontid as usize];
+  let widths = &font.widths[0];
+  let chars: Vec<char> = text.chars().collect();
+
+  let mut size = Vec3i::default();
+  size.y = font.height as IScalar;
+
+  for i in 0..text.len() {
+    let charid = chars[i] as usize;
+
+    size.x += widths[charid] as IScalar;
+  }
+
+  size
+}
+
 pub fn draw_text(fontid: FontId, text: &str, pos: Vec3i) {
   let context = globals::get_context();
   let font = &context.data.fonts[fontid as usize];

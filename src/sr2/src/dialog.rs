@@ -11,6 +11,8 @@ pub trait Widget {
 const DIALOG_MARGIN: IScalar = 20;
 const DIALOG_MARGIN2: IScalar = DIALOG_MARGIN * 2;
 
+const DIALOG_PADDING: IScalar = 10;
+
 pub struct Dialog {
   boundaries: Vec3i,
   widget: Box<Widget>,
@@ -19,7 +21,7 @@ pub struct Dialog {
 
 impl Dialog {
   pub fn new(widget: Box<Widget>) -> Self {
-    let size = widget.get_size();
+    let size = widget.get_size() + DIALOG_PADDING * 2;
 
     Dialog {
       boundaries: Vec3i::default(),
@@ -47,11 +49,11 @@ impl Widget for Dialog {
 
     // TODO: expand
 
-    self.widget.set_boundaries(self.size);
+    self.widget.set_boundaries(self.size - DIALOG_PADDING * 2);
   }
 
   fn get_size(&self) -> Vec3i {
-    self.size
+    self.size + DIALOG_PADDING * 2
   }
 
   fn draw(&self, offset: Vec3i) {
@@ -64,21 +66,62 @@ impl Widget for Dialog {
                                self.size.x,
                                self.size.y);
 
-    self.widget.draw(offset);
+    self.widget.draw(offset + DIALOG_PADDING);
+  }
+}
+
+pub struct TextWidget {
+  boundaries: Vec3i,
+  text: String
+}
+
+impl TextWidget {
+  pub fn new(text: &str) -> Self {
+    TextWidget {
+      boundaries: Vec3i::default(),
+      text: text.to_string()
+    }
+  }
+
+  pub fn set_text(&mut self, text: &str) {
+    self.text = text.to_string();
+  }
+}
+
+impl Widget for TextWidget {
+  fn set_boundaries(&mut self, new_boundaries: Vec3i) {
+    self.boundaries = new_boundaries;
+  }
+
+  fn get_size(&self) -> Vec3i {
+    text::text_size(0, &self.text[..])
+  }
+
+  fn draw(&self, offset: Vec3i) {
+    // TODO: clipping, wrapping, alignment
+    text::draw_text(0, &self.text[..], offset);
   }
 }
 
 pub struct PauseMenu {
+  textwidget: TextWidget
 }
 
 impl PauseMenu {
   pub fn new() -> Self {
-    PauseMenu {}
+    PauseMenu {
+      textwidget: TextWidget::new("The quick brown fox jumped over the lazy dog.")
+    }
   }
 }
 
 impl Widget for PauseMenu {
   fn get_size(&self) -> Vec3i {
-    Vec3i::new2(50, 50)
+    //Vec3i::new2(50, 50)
+    self.textwidget.get_size()
+  }
+
+  fn draw(&self, offset: Vec3i) {
+    self.textwidget.draw(offset);
   }
 }

@@ -25,6 +25,7 @@ mod util;
 mod input;
 mod image;
 mod text;
+mod dialog;
 mod screen;
 use screen::Screen;
 
@@ -154,6 +155,7 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
 
     context.input.step();
 
+    let mut newsize: Option<Vec3i> = None;
     while let Some(event) = context.platform.poll_event() {
       if let Event::Quit = event {
         context.running = false;
@@ -161,6 +163,10 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
       }
 
       context.input.process_platform_event(event);
+
+      if let Event::Resize(new_size) = event {
+        newsize = Some(new_size);
+      }
     }
 
     if !context.running {
@@ -168,6 +174,10 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
     }
 
     if let Some(ref mut screen) = context.screen {
+      if let Some(newsize) = newsize {
+        screen.set_size(newsize);
+      }
+
       screen.step(context.delta);
 
       if !context.running {

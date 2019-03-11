@@ -86,8 +86,7 @@ impl PlayerController for ModernPlayerControls {
       player.base.angle = angle;
     }
 
-      // TODO implement sliding
-
+    // TODO implement sliding
     if (player.base.stance == entity::EntityStance::Standing ||
         player.base.stance == entity::EntityStance::Aiming ||
         player.base.stance == entity::EntityStance::Walking ||

@@ -1,8 +1,10 @@
 use super::*;
+use dialog::Widget;
 
 pub trait Screen {
   fn init(&mut self) {}
   fn step(&mut self, _delta: Time) {}
+  fn set_size(&mut self, size: Vec3i) {}
   fn draw(&mut self) {}
 }
 
@@ -18,7 +20,9 @@ pub struct GameScreen {
   pub scale: FScalar,
 
   pub vehicle_state: vehicle::VehicleState,
-  pub entity_spawn_counter: usize
+  pub entity_spawn_counter: usize,
+
+  pub dialogs: Vec<dialog::Dialog>
 }
 
 struct CollisionResponse {
@@ -29,7 +33,7 @@ struct CollisionResponse {
 
 impl GameScreen {
   pub fn new(levelid: LevelId) -> Self {
-    //let context = globals::get_context();
+    let context = globals::get_context();
 
     let mut game = GameScreen {
       level: level::get_level_from_levelid(levelid),
@@ -42,10 +46,15 @@ impl GameScreen {
       scale: 1.,
 
       vehicle_state: vehicle::VehicleState::new(),
-      entity_spawn_counter: 0
+      entity_spawn_counter: 0,
+
+      dialogs: vec![]
     };
 
     game.camera.size = Vec3i::new2(240, 320);
+
+    game.dialogs.push(dialog::Dialog::new(Box::new(dialog::PauseMenu::new())));
+    game.dialogs[0].set_boundaries(context.platform.get_size());
 
     game
   }
@@ -389,6 +398,12 @@ impl Screen for GameScreen {
     self.step_collision(delta);
   }
 
+  fn set_size(&mut self, size: Vec3i) {
+    for dialog in self.dialogs.iter_mut() {
+      dialog.set_boundaries(size);
+    }
+  }
+
   fn draw(&mut self) {
     let context = globals::get_context();
 
@@ -407,7 +422,7 @@ impl Screen for GameScreen {
     level::draw_objects(&self.level, &self.entities, &self.entity_ids);
     level::draw_level_layer(&self.level.layer2);
 
-
+    sprite::draw_sprite(1117, Vec3i::new2(50, 50), 0);
 
     // draw camera
     context.platform.set_color(Color { r: 255, g: 0, b: 0, a: 255 });
@@ -427,5 +442,11 @@ impl Screen for GameScreen {
                                self.camera.pos.y - 2,
                                4,
                                self.camera.size.y + 2);
+
+    context.platform.reset();
+
+    if self.dialogs.len() > 0 {
+      self.dialogs[self.dialogs.len() - 1].draw(Vec3i::default());
+    }
   }
 }

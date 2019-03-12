@@ -194,9 +194,11 @@ pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
 
 fn level_drawable_aabb(layer: &LevelLayer) -> (Vec3i, Vec3i) {
   let context = globals::get_context();
-  let size = context.platform.get_size() / layer.tilesize.x;
+  // Creep has a tilesize of 0
+  let tilesize = util::TILESIZE;//layer.tilesize.x;
+  let size = context.platform.get_size() / tilesize;
   let scale = 1. / context.platform.get_scale();
-  let translate = context.platform.get_translation() / layer.tilesize.x;
+  let translate = context.platform.get_translation() / tilesize;
 
   let startx = std::cmp::max(0, -translate.x);
   let starty = std::cmp::max(0, -translate.y);

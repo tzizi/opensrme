@@ -200,13 +200,12 @@ fn level_drawable_aabb(layer: &LevelLayer) -> (Vec3i, Vec3i) {
   let scale = 1. / context.platform.get_scale();
   let translate = context.platform.get_translation() / tilesize;
 
-  let startx = std::cmp::max(0, -translate.x);
-  let starty = std::cmp::max(0, -translate.y);
+  let startx = std::cmp::max(0, -translate.x - layer.start.x);
+  let starty = std::cmp::max(0, -translate.y - layer.start.y);
   let endx = std::cmp::min(layer.size.x, util::iscale_ceil(scale, size.x) - translate.x + 2);
   let endy = std::cmp::min(layer.size.y, util::iscale_ceil(scale, size.y) - translate.y + 2);
 
   (Vec3i::new2(startx, starty), Vec3i::new2(endx, endy))
-  //std::cmp::min(level.size.x,
 }
 
 pub fn draw_level_layer(layer: &LevelLayer) {

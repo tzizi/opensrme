@@ -5,10 +5,6 @@ pub trait Archive {
   fn new(filename: &str) -> Self where Self: Sized;
   fn open_file(&self, filename: &str) -> std::io::Result<std::io::Cursor<Vec<u8>>>;
   fn list_dir(&self, filename: &str) -> std::io::Result<Vec<String>>;
-
-  fn get_manifest(&self) -> std::io::Result<Manifest> {
-    Manifest::new_from_file(&mut self.open_file("META-INF/MANIFEST.MF")?)
-  }
 }
 
 

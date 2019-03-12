@@ -34,10 +34,14 @@ use opensrme_common::*;
 use std::io;
 
 pub fn check(archive: &Archive) -> io::Result<bool> {
-  let manifest = archive.get_manifest()?;
+  let files = archive.list_dir(".")?;
+  for file in files {
+    if file == "bin.all" {
+      return Ok(true);
+    }
+  }
 
-  Ok(check_manifest!(manifest,
-                     "MIDlet-Name": "Saints Row 2"))
+  Ok(false)
 }
 
 fn draw_splash(archive: &Box<Archive>, platform: &mut Platform) {

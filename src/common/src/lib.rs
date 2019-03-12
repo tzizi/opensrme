@@ -1,5 +1,4 @@
 extern crate byteorder;
-extern crate regex;
 extern crate sdl2;
 extern crate image;
 
@@ -9,10 +8,6 @@ mod datastream;
 pub use datastream::*;
 mod archive;
 pub use archive::*;
-
-#[macro_use]
-mod manifest;
-pub use manifest::*;
 
 mod game;
 pub use game::*;

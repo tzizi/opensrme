@@ -110,7 +110,7 @@ pub struct PauseMenu {
 impl PauseMenu {
   pub fn new() -> Self {
     PauseMenu {
-      textwidget: TextWidget::new("The quick brown fox jumped over the lazy dog.")
+      textwidget: TextWidget::new("The quick brown fox jumps over the lazy dog.")
     }
   }
 }

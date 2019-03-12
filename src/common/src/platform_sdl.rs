@@ -1,6 +1,5 @@
 use super::types::*;
 use super::platform::*;
-use std::io::*;
 use std::collections::*;
 
 use sdl2::event::Event as SEvent;
@@ -24,7 +23,7 @@ pub struct SDL2Platform {
 
 // https://wiki.libsdl.org/SDLKeycodeLookup
 // var nums = []; t.querySelectorAll("tr").forEach((el) => {var text = el.querySelector("td").innerText;var n = parseInt(text); if (!isNaN(n) && n < 256) {nums.push(n)}});
-static kv_table: &'static [u8] = &[
+static KV_TABLE: &'static [u8] = &[
   0, 8, 9, 13, 27, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 127
 ];
 
@@ -37,10 +36,10 @@ fn key_to_ascii(key: sdl2::keyboard::Keycode) -> u8 {
     return 0;
   }
 
-  println!("{} {}", code, kv_table.len());
+  println!("{} {}", code, KV_TABLE.len());
 
-  if (code as usize) < kv_table.len() {
-    kv_table[code as usize]
+  if (code as usize) < KV_TABLE.len() {
+    KV_TABLE[code as usize]
   } else {
     0
   }

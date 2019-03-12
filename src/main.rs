@@ -7,7 +7,6 @@ static GLOBAL: System = System;
 
 extern crate opensrme_common;
 
-extern crate opensrme_lsw2;
 extern crate opensrme_sr2;
 
 use opensrme_common::*;
@@ -22,7 +21,6 @@ fn main() {
   }
 
   let games = vec![
-    &opensrme_lsw2::GAME,
     &opensrme_sr2::GAME
   ];
 

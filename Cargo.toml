@@ -1,7 +1,7 @@
 [workspace]
 members = [
  "src/common",
- "src/lsw2"
+ "src/sr2"
 ]
 
 [package]
@@ -11,5 +11,4 @@ authors = ["tzizi"]
 
 [dependencies]
 "opensrme_common" = { path = "src/common" }
-"opensrme_lsw2" = { path = "src/lsw2" }
 "opensrme_sr2" = { path = "src/sr2" }

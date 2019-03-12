@@ -25,11 +25,11 @@ unsafe fn extend_lifetime<'b, T>(r: R<'b, T>) -> R<'static, T> {
     std::mem::transmute::<R<'b, T>, R<'static, T>>(r)
 }
 
-static mut global_context: Option<Context> = None;
+static mut GLOBAL_CONTEXT: Option<Context> = None;
 
 pub fn get_context() -> &'static mut Context {
   unsafe {
-    if let Some(ref mut context) = &mut global_context {
+    if let Some(ref mut context) = &mut GLOBAL_CONTEXT {
       context
     } else {
       panic!("Context uninitialized");
@@ -39,7 +39,7 @@ pub fn get_context() -> &'static mut Context {
 
 pub fn set_context(context: Context) {
   unsafe {
-    global_context = Some(context);
+    GLOBAL_CONTEXT = Some(context);
   }
 }
 

@@ -4,7 +4,7 @@ use dialog::Widget;
 pub trait Screen {
   fn init(&mut self) {}
   fn step(&mut self, _delta: Time) {}
-  fn set_size(&mut self, size: Vec3i) {}
+  fn set_size(&mut self, _size: Vec3i) {}
   fn draw(&mut self) {}
 }
 
@@ -240,12 +240,12 @@ impl GameScreen {
       return None;
     }
 
-    const values: [[IScalar; 2]; 4] = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+    const VALUES: [[IScalar; 2]; 4] = [[0, -1], [1, 0], [0, 1], [-1, 0]];
 
     let id: usize = (current % 4) as usize;
 
-    let mut x = max * values[id][0];
-    let mut y = max * values[id][1];
+    let mut x = max * VALUES[id][0];
+    let mut y = max * VALUES[id][1];
 
     let temp = current / 4 + 1;
     let mut mult = temp / 2;
@@ -254,8 +254,8 @@ impl GameScreen {
       mult *= -1;
     }
 
-    x += mult * values[id][1];
-    y += mult * values[id][0];
+    x += mult * VALUES[id][1];
+    y += mult * VALUES[id][0];
 
     Some(Vec3::new2(x, y))
   }

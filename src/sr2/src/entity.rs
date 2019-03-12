@@ -169,7 +169,7 @@ pub struct EntityBase {
 
 impl EntityBase {
   pub fn new(id: EntityId, class: ClassId) -> Self {
-    let context = get_context();
+    let context = globals::get_context();
 
     EntityBase {
       id,

@@ -9,7 +9,6 @@ extern crate ncollide2d;
 mod types;
 use types::*;
 mod globals;
-use globals::*;
 mod sprite;
 mod bin_all;
 use bin_all::*;
@@ -99,7 +98,7 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
     }
   }
 
-  let context = Context {
+  let context = globals::Context {
     running: true,
     archive: archive,
     platform: Box::new(platform),
@@ -115,8 +114,8 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
     input: input::InputContext::default()
   };
 
-  set_context(context);
-  let mut context = get_context();
+  globals::set_context(context);
+  let mut context = globals::get_context();
 
   /*for i in context.data.images.iter() {
     println!("{}", i);

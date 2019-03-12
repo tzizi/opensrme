@@ -4,28 +4,28 @@ use entity::*;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TrafficLight {
-  H_GREEN  = 0,
-  H_YELLOW = 1,
-  V_GREEN  = 2,
-  V_YELLOW = 3
+  HGreen  = 0,
+  HYellow = 1,
+  VGreen  = 2,
+  VYellow = 3
 }
 
 impl TrafficLight {
   fn index(&self) -> usize {
     match *self {
-      TrafficLight::H_GREEN  => 0,
-      TrafficLight::H_YELLOW => 0,
-      TrafficLight::V_GREEN  => 1,
-      TrafficLight::V_YELLOW => 1
+      TrafficLight::HGreen  => 0,
+      TrafficLight::HYellow => 0,
+      TrafficLight::VGreen  => 1,
+      TrafficLight::VYellow => 1
     }
   }
 
   fn is_green(&self) -> bool {
     match *self {
-      TrafficLight::H_GREEN  => true,
-      TrafficLight::H_YELLOW => false,
-      TrafficLight::V_GREEN  => true,
-      TrafficLight::V_YELLOW => false
+      TrafficLight::HGreen  => true,
+      TrafficLight::HYellow => false,
+      TrafficLight::VGreen  => true,
+      TrafficLight::VYellow => false
     }
   }
 }
@@ -38,7 +38,7 @@ pub struct VehicleState {
 impl VehicleState {
   pub fn new() -> Self {
     VehicleState {
-      trafficlight: TrafficLight::H_GREEN
+      trafficlight: TrafficLight::HGreen
     }
   }
 
@@ -47,12 +47,12 @@ impl VehicleState {
 
     let state_number = (context.time / 3000) % 4;
     self.trafficlight = match state_number {
-      0 => TrafficLight::H_GREEN,
-      1 => TrafficLight::H_YELLOW,
-      2 => TrafficLight::V_GREEN,
-      3 => TrafficLight::V_YELLOW,
+      0 => TrafficLight::HGreen,
+      1 => TrafficLight::HYellow,
+      2 => TrafficLight::VGreen,
+      3 => TrafficLight::VYellow,
 
-      _ => TrafficLight::H_GREEN // shouldn't happen
+      _ => TrafficLight::HGreen // shouldn't happen
     };
   }
 }
@@ -73,7 +73,7 @@ fn is_intersection(tiledata: LevelTileData) -> bool {
   tiledata >= 18 && tiledata <= 29
 }
 
-const road_direction_table: [[Angle; 2]; 20] = [
+const ROAD_DIRECTION_TABLE: [[Angle; 2]; 20] = [
   // 10
   [ANGLE_E, ANGLE_E],
   // 11
@@ -117,44 +117,44 @@ const road_direction_table: [[Angle; 2]; 20] = [
 ];
 
 fn get_road_direction(tiledata: LevelTileData, trafficlight: TrafficLight) -> Option<Angle> {
-  if tiledata < 10 || (tiledata as usize) - 10 >= road_direction_table.len() {
+  if tiledata < 10 || (tiledata as usize) - 10 >= ROAD_DIRECTION_TABLE.len() {
     None
   } else {
-    Some(road_direction_table[(tiledata - 10) as usize][trafficlight.index()])
+    Some(ROAD_DIRECTION_TABLE[(tiledata - 10) as usize][trafficlight.index()])
   }
 }
 
 //                            e      w      s      n      se     sw     ne     nw
-const e_rule: [bool; 8] = [ true,  false, false, false, true,  false, true,  false ];
-const w_rule: [bool; 8] = [ false, true,  false, false, false, true,  false, true  ];
-const n_rule: [bool; 8] = [ false, false, false, true,  false, false, true,  true  ];
-const s_rule: [bool; 8] = [ false, false, true,  false, true,  true,  false, false ];
+const E_RULE: [bool; 8] = [ true,  false, false, false, true,  false, true,  false ];
+const W_RULE: [bool; 8] = [ false, true,  false, false, false, true,  false, true  ];
+const N_RULE: [bool; 8] = [ false, false, false, true,  false, false, true,  true  ];
+const S_RULE: [bool; 8] = [ false, false, true,  false, true,  true,  false, false ];
 
-const road_rules: [[[bool; 8]; 2]; 12] = [
+const ROAD_RULES: [[[bool; 8]; 2]; 12] = [
   // 18
-  [ e_rule, n_rule ],
+  [ E_RULE, N_RULE ],
   // 19
-  [ w_rule, n_rule ],
+  [ W_RULE, N_RULE ],
   // 20
-  [ e_rule, s_rule ],
+  [ E_RULE, S_RULE ],
   // 21
-  [ w_rule, s_rule ],
+  [ W_RULE, S_RULE ],
   // 22
-  [ e_rule, s_rule ],
+  [ E_RULE, S_RULE ],
   // 23
-  [ e_rule, n_rule ],
+  [ E_RULE, N_RULE ],
   // 24
-  [ w_rule, s_rule ],
+  [ W_RULE, S_RULE ],
   // 25
-  [ w_rule, n_rule ],
+  [ W_RULE, N_RULE ],
   // 26
-  [ e_rule, s_rule ],
+  [ E_RULE, S_RULE ],
   // 27
-  [ w_rule, s_rule ],
+  [ W_RULE, S_RULE ],
   // 28
-  [ e_rule, n_rule ],
+  [ E_RULE, N_RULE ],
   // 29
-  [ w_rule, n_rule ]
+  [ W_RULE, N_RULE ]
 ];
 
 // TODO: split into multiple functions like in original game
@@ -191,7 +191,7 @@ fn can_move_on_road(entity: &EntityBase, angle: Angle, last_tiledata: LevelTileD
   let wanted_roaddata: usize = wanted_tiledata as usize - 10 - 8;
   let last_roaddata: usize = last_tiledata as usize - 10;
 
-  if !road_rules[wanted_roaddata][trafficlight.index()][last_roaddata] {
+  if !ROAD_RULES[wanted_roaddata][trafficlight.index()][last_roaddata] {
     return (false, wanted_tiledata);
   }
 
@@ -501,7 +501,7 @@ impl EntityData for VehicleData {
         entity.entity_type == EntityType::MovingVehicle ||
         entity.entity_type == EntityType::EnemyVehicle ||
         entity.entity_type == EntityType::PoliceCar) {
-      let context = get_context();
+      let context = globals::get_context();
       let class = &context.data.classes[entity.class as usize];
 
       Some(collision::ShapeInfo {

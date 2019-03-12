@@ -76,7 +76,7 @@ impl ModernPlayerControls {
 }
 
 impl PlayerController for ModernPlayerControls {
-  fn process(&mut self, delta: Time, data: &mut person::PlayerData) {
+  fn process(&mut self, delta: Time, _data: &mut person::PlayerData) {
     let context = globals::get_context();
     let player = &mut globals::get_game().entities[0];
 

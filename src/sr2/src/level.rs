@@ -194,21 +194,26 @@ pub fn load_entities(level: &Level) -> Vec<entity::Entity> {
 
 fn level_drawable_aabb(layer: &LevelLayer) -> (Vec3i, Vec3i) {
   let context = globals::get_context();
-  // Creep has a tilesize of 0
-  let tilesize = util::TILESIZE;//layer.tilesize.x;
-  let size = context.platform.get_size() / tilesize;
+  let tilesize = layer.tilesize.x;
+  let start = layer.start - (layer.tilesize / 2);
+  let size = context.platform.get_size();
   let scale = 1. / context.platform.get_scale();
-  let translate = context.platform.get_translation() / tilesize;
+  let translate = context.platform.get_translation();
+  let clipstart = translate * -1;
 
-  let startx = std::cmp::max(0, -translate.x - layer.start.x);
-  let starty = std::cmp::max(0, -translate.y - layer.start.y);
-  let endx = std::cmp::min(layer.size.x, util::iscale_ceil(scale, size.x) - translate.x + 2);
-  let endy = std::cmp::min(layer.size.y, util::iscale_ceil(scale, size.y) - translate.y + 2);
+  let startx = std::cmp::max(0, (clipstart.x - start.x) / tilesize);
+  let starty = std::cmp::max(0, (clipstart.y - start.y) / tilesize);
+  let endx = std::cmp::min(layer.size.x, startx + (util::iscale_ceil(scale, size.x) + tilesize - 1) / tilesize + 1);
+  let endy = std::cmp::min(layer.size.y, starty + (util::iscale_ceil(scale, size.y) + tilesize - 1) / tilesize + 1);
 
   (Vec3i::new2(startx, starty), Vec3i::new2(endx, endy))
 }
 
 pub fn draw_level_layer(layer: &LevelLayer) {
+  if layer.tilesize.x == 0 || layer.tilesize.y == 0 {
+    return;
+  }
+
   let (start, end) = level_drawable_aabb(layer);
   for x in start.x..end.x {
     for y in start.y..end.y {

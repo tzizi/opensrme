@@ -11,7 +11,7 @@ authors = ["tzizi"]
 
 [profile.release]
 #opt-level = 'z' # makes it larger?
-#codegen-units = 1 # slower
+#codegen-units = 1 # slower compilation
 lto = true
 panic = 'abort'
 

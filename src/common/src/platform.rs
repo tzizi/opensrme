@@ -93,7 +93,7 @@ pub trait Platform {
         data: image.into_raw()
       })
     } else {
-      0
+      panic!("Unable to load image");
     }
   }
   fn load_image_from_filename(&mut self, archive: &Archive, image: &str) -> PlatformId {
@@ -103,10 +103,10 @@ pub trait Platform {
       if let Ok(_) = file.read_to_end(&mut bytes) {
         self.load_image(&bytes[..])
       } else {
-        0
+        panic!("Unable to read image: {}", image);
       }
     } else {
-      0
+      panic!("Unable to open image: {}", image);
     }
   }
   fn unload_image(&mut self, image: PlatformId);

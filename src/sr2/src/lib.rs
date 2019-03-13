@@ -135,6 +135,10 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
   }
 
   for i in 0..context.data.images.len() {
+    if i == 35 { // resource.max
+      continue;
+    }
+
     println!("Loading image #{}", i);
     image::load_image(i as ImageId, 0);
   }

@@ -91,7 +91,11 @@ pub fn new_with_path_palette(path: &str, palette: &Palette) -> PlatformId {
   if let Ok(mut file) = context.archive.open_file(path) {
     if let Ok(data) = replace_image_palette(&mut file, palette) {
       return context.platform.load_image(&data[..]);
+    } else {
+      panic!("Unable to replace image palette for file: {}", path);
     }
+  } else {
+    panic!("Unable to open file: {}", path);
   }
 
   0
@@ -105,6 +109,11 @@ pub fn load_image(image: ImageId, palette: PaletteId) -> PlatformId {
     palette = 0;
   }
 
+  let platform_id = context.palette_images[palette as usize][image as usize];
+  if platform_id != 0 {
+    return platform_id;
+  }
+
   let filename = &context.data.images[image as usize][..];
   let platform_id =
     match palette {
@@ -115,4 +124,13 @@ pub fn load_image(image: ImageId, palette: PaletteId) -> PlatformId {
   context.palette_images[palette as usize][image as usize] = platform_id;
 
   platform_id
+}
+
+pub fn copy_image_palette(image: ImageId, source_palette: PaletteId, dest_palette: PaletteId) {
+  let context = globals::get_context();
+
+  load_image(image, source_palette);
+
+  context.palette_images[dest_palette as usize][image as usize] =
+    context.palette_images[source_palette as usize][image as usize];
 }

@@ -148,7 +148,7 @@ impl PlayerData {
 
 fn get_palette_id(entity_type: EntityType) -> PaletteId {
   if entity_type == EntityType::Player {
-    13
+    11
   } else if entity_type == EntityType::Police {
     0
   } else if (entity_type == EntityType::Type1 ||

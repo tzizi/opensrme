@@ -352,10 +352,35 @@ impl GameScreen {
 
 impl Screen for GameScreen {
   fn init(&mut self) {
-    level::load_images(self.levelid);
+    image::load_image(3, 0);
+    image::load_image(0, 0);
+    image::load_image(6, 0); // human without palette, temporarily needed
+    //image::load_image(8, 0);
+
+    // player images
+    image::load_image(8, 11); // female
+    image::load_image(6, 11); // male
+
     image::load_image(6, 12);
     image::load_image(6, 13);
     image::load_image(8, 12);
+
+    //image::load_image(5, 0);
+    //image::load_image(7, 0);
+    image::load_image(4, 0); // policecar
+
+    image::load_image(12, 0); // policeman
+    image::load_image(11, 0);
+
+    //image::load_image(13, 0);
+    image::load_image(16, 0);
+    //image::load_image(18, 0);
+    image::load_image(25, 0);
+    image::load_image(27, 0);
+    image::load_image(31, 0);
+    image::load_image(29, 0);
+    image::load_image(33, 0);
+
     for i in 1..4 {
       image::load_image(18, i);
     }
@@ -368,6 +393,13 @@ impl Screen for GameScreen {
     for i in 1..4 {
       image::load_image(13, i);
     }
+
+    image::copy_image_palette(18, 1, 0);
+    image::copy_image_palette(5, 1, 0);
+    image::copy_image_palette(7, 1, 0);
+    image::copy_image_palette(13, 1, 0);
+
+    level::load_images(self.levelid);
 
     self.entities = level::load_entities(&self.level);
     self.create_entity_ids();

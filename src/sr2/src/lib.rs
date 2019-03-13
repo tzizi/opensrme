@@ -134,14 +134,14 @@ pub fn main(archive: Box<Archive>, _args: Vec<String>) {
     text::load_font(i as FontId);
   }
 
-  for i in 0..context.data.images.len() {
+  /*for i in 0..context.data.images.len() {
     if i == 35 { // resource.max
       continue;
     }
 
     println!("Loading image #{}", i);
     image::load_image(i as ImageId, 0);
-  }
+  }*/
 
   let mut game = screen::GameScreen::new(0);
   game.init();

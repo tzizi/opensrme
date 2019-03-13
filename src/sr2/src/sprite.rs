@@ -132,8 +132,14 @@ pub fn draw_sprite_palette(spriteid: SpriteId, pos: Vec3i, flip: Flip, palette_m
           }
         }
 
+        let platform_id = context.palette_images[palette as usize][image_id as usize];
+        if platform_id == 0 {
+          //println!("Attempting to draw non-loaded image: {{ I: {}, P: {} }}", image_id, palette);
+          continue;
+        }
+
         context.platform.draw_region(
-          context.palette_images[palette as usize][image_id as usize],
+          platform_id,
           start_x as IScalar,
           start_y as IScalar,
           (aabb[2] - aabb[0]) as IScalar,

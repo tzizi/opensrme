@@ -6,7 +6,11 @@ authors = ["tzizi"]
 [dependencies]
 byteorder = "1"
 #piston_window = "0.81.0"
-image = "*"
+
+[dependencies.image]
+version = "*"
+default-features = false
+features = ["png_codec"]
 
 [dependencies.sdl2]
 version = "*"

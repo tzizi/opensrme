@@ -9,6 +9,12 @@ name = "opensrme"
 version = "0.0.1"
 authors = ["tzizi"]
 
+[profile.release]
+#opt-level = 'z' # makes it larger?
+#codegen-units = 1 # slower
+lto = true
+panic = 'abort'
+
 [dependencies]
 "opensrme_common" = { path = "src/common" }
 "opensrme_sr2" = { path = "src/sr2" }

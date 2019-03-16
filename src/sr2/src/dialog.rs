@@ -103,25 +103,140 @@ impl Widget for TextWidget {
   }
 }
 
+pub struct BoxItem {
+  widget: Box<Widget>,
+  padding_top: IScalar,
+  padding_bottom: IScalar,
+  padding_left: IScalar,
+  padding_right: IScalar
+}
+
+impl BoxItem {
+  pub fn new(widget: Box<Widget>,
+             top: IScalar,
+             bottom: IScalar,
+             left: IScalar,
+             right: IScalar) -> BoxItem {
+    BoxItem {
+      widget,
+      padding_top: top,
+      padding_bottom: bottom,
+      padding_left: left,
+      padding_right: right
+    }
+  }
+}
+
+pub enum BoxOrientation {
+  HORIZONTAL = 0,
+  VERTICAL = 1
+}
+
+pub struct BoxContainer {
+  orientation: BoxOrientation,
+  pub items: Vec<BoxItem>
+}
+
+impl BoxContainer {
+  fn new(orientation: BoxOrientation) -> BoxContainer {
+    BoxContainer {
+      orientation,
+      items: Vec::new()
+    }
+  }
+
+  fn add_item(&mut self, widget: Box<Widget>,
+              top: IScalar,
+              bottom: IScalar,
+              left: IScalar,
+              right: IScalar) {
+    self.items.push(BoxItem::new(widget, top, bottom, left, right))
+  }
+
+  fn add_item_ap(&mut self, widget: Box<Widget>, all: IScalar) {
+    self.add_item(widget, all, all, all, all)
+  }
+}
+
+impl Widget for BoxContainer {
+  // TODO: optimize duplicate get_size() calls
+
+  fn get_size(&self) -> Vec3i {
+    let mut size = Vec3i::default();
+
+    for item in self.items.iter() {
+      let item_size = item.widget.get_size();
+      let size_x = item.padding_left + item_size.x + item.padding_right;
+      let size_y = item.padding_top + item_size.y + item.padding_bottom;
+
+      match self.orientation {
+        BoxOrientation::HORIZONTAL => {
+          size.x += size_x;
+          size.y = std::cmp::max(size.y, size_y);
+        },
+        BoxOrientation::VERTICAL => {
+          size.y += size_y;
+          size.x = std::cmp::max(size.x, size_x);
+        }
+      }
+    }
+
+    size
+  }
+
+  fn draw(&self, base_offset: Vec3i) {
+    let mut offset = Vec3i::default();
+
+    for item in self.items.iter() {
+      let item_size = item.widget.get_size();
+      let mut append_size = Vec3i::default();
+
+      match self.orientation {
+        BoxOrientation::HORIZONTAL => {
+          offset.x += item.padding_left;
+          offset.y = item.padding_top;
+
+          append_size.x = item_size.x + item.padding_right;
+        },
+        BoxOrientation::VERTICAL => {
+          offset.x = item.padding_left;
+          offset.y += item.padding_top;
+
+          append_size.y = item_size.y + item.padding_bottom;
+        }
+      }
+
+      item.widget.draw(base_offset + offset);
+
+      offset = offset + append_size;
+    }
+  }
+}
+
 pub struct PauseMenu {
-  textwidget: TextWidget
+  boxc: BoxContainer
 }
 
 impl PauseMenu {
   pub fn new() -> Self {
-    PauseMenu {
-      textwidget: TextWidget::new("The quick brown fox jumps over the lazy dog.")
-    }
+    let mut pausemenu = PauseMenu {
+      boxc: BoxContainer::new(BoxOrientation::VERTICAL)
+    };
+
+    pausemenu.boxc.add_item_ap(Box::new(TextWidget::new("The quick brown fox")), 0);
+    pausemenu.boxc.add_item_ap(Box::new(TextWidget::new("jumps")), 30);
+    pausemenu.boxc.add_item_ap(Box::new(TextWidget::new("over the lazy dog.")), 0);
+
+    pausemenu
   }
 }
 
 impl Widget for PauseMenu {
   fn get_size(&self) -> Vec3i {
-    //Vec3i::new2(50, 50)
-    self.textwidget.get_size()
+    self.boxc.get_size()
   }
 
   fn draw(&self, offset: Vec3i) {
-    self.textwidget.draw(offset);
+    self.boxc.draw(offset);
   }
 }

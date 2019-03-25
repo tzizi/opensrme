@@ -102,42 +102,102 @@ impl Widget for Dialog {
 
 pub struct TextWidget {
   boundaries: SizeBoundary,
-  text: String
+  text: String,
+  split_text: Vec<String>,
+  wrapped: Vec<String>,
+  full_size: Vec3i,
+  actual_size: Vec3i
 }
 
 impl TextWidget {
   pub fn new(text: &str) -> Self {
-    TextWidget {
+    let mut widget = TextWidget {
       boundaries: SizeBoundary::None,
-      text: text.to_string()
+      text: text.to_string(),
+      split_text: vec![],
+      wrapped: vec![],
+      full_size: Vec3i::default(),
+      actual_size: Vec3i::default()
+    };
+
+    widget.set_text(text);
+
+    widget
+  }
+
+  fn get_split_size(lines: &Vec<String>) -> Vec3i {
+    let mut size = Vec3i::default();
+
+    for line in lines.iter() {
+      let line_size = text::text_size(0, &line[..]);
+      if line_size.x > size.x {
+        size.x = line_size.x;
+      }
+
+      size.y += line_size.y;
     }
+
+    size
+  }
+
+  fn update_split_text(&mut self) {
+    self.split_text = vec![];
+
+    let mut size = Vec3i::default();
+
+    for line in self.text.lines() {
+      self.split_text.push(line.to_string());
+    }
+
+    self.full_size = TextWidget::get_split_size(&self.split_text);
+  }
+
+  fn update_wrap(&mut self) {
+    let x_size = match self.boundaries {
+      SizeBoundary::Both(size) => { size.x },
+      SizeBoundary::X(x) => { x },
+      // TODO: Y?
+      _ => {
+        self.wrapped = self.split_text.clone();
+        self.actual_size = self.full_size;
+        return;
+      }
+    };
+
+    self.wrapped = text::word_wrap(0, &self.text[..], x_size);
+    self.actual_size = TextWidget::get_split_size(&self.wrapped);
   }
 
   pub fn set_text(&mut self, text: &str) {
     self.text = text.to_string();
+
+    self.update_split_text();
+    self.update_wrap();
   }
 }
 
 impl Widget for TextWidget {
   fn set_boundaries(&mut self, new_boundaries: SizeBoundary) {
     self.boundaries = new_boundaries;
+    self.update_wrap();
   }
 
   fn get_size(&self) -> Vec3i {
-    match self.boundaries {
-      SizeBoundary::None => { self.get_max_size().unwrap() },
-      SizeBoundary::Both(size) => { size },
-      _ => { Vec3i::default() }
-    }
+    self.actual_size
   }
 
   fn get_max_size(&self) -> Option<Vec3i> {
-    Some(text::text_size(0, &self.text[..]))
+    Some(self.full_size)
   }
 
   fn draw(&self, offset: Vec3i) {
-    // TODO: clipping, wrapping, alignment
-    text::draw_text(0, &self.text[..], offset);
+    // TODO: clipping, alignment
+    let mut offset = offset;
+
+    for line in self.wrapped.iter() {
+      let size = text::draw_text(0, line, offset);
+      offset.y += size.y;
+    }
   }
 }
 
@@ -164,6 +224,13 @@ impl BoxItem {
     }
   }
 
+  fn get_padding(&self) -> Vec3i {
+    Vec3i::new2(
+      self.padding_left + self.padding_right,
+      self.padding_top + self.padding_bottom
+    )
+  }
+
   fn get_full_size(&self, item_size: Vec3i) -> Vec3i {
     Vec3i::new2(
       self.padding_left + item_size.x + self.padding_right,
@@ -172,6 +239,7 @@ impl BoxItem {
   }
 }
 
+#[derive(Debug,PartialEq,Copy,Clone)]
 pub enum BoxOrientation {
   HORIZONTAL = 0,
   VERTICAL = 1
@@ -228,20 +296,93 @@ impl BoxContainer {
       }
     }
   }
+
+  fn quick_set_boundaries(&mut self) {
+    for item in self.items.iter_mut() {
+      item.widget.set_boundaries(self.boundaries);
+    }
+  }
 }
 
 impl Widget for BoxContainer {
   // TODO: optimize duplicate get_size() calls
-  // TODO: set_boundaries, and proper sizing for children elements (min/max?)
 
   fn set_boundaries(&mut self, new_boundaries: SizeBoundary) {
+    // TODO: fix padding
     if new_boundaries == self.boundaries {
       return;
     }
 
     self.boundaries = new_boundaries;
 
-    // TODO
+    let mut remaining_size = match new_boundaries {
+      SizeBoundary::None => {
+        return self.quick_set_boundaries();
+      },
+      SizeBoundary::X(x) => {
+        if self.orientation == BoxOrientation::VERTICAL {
+          return self.quick_set_boundaries();
+        }
+
+        x
+      },
+      SizeBoundary::Y(y) => {
+        if self.orientation == BoxOrientation::HORIZONTAL {
+          return self.quick_set_boundaries();
+        }
+
+        y
+      },
+      SizeBoundary::Both(size) => {
+        if self.orientation == BoxOrientation::VERTICAL {
+          size.y
+        } else {
+          size.x
+        }
+      }
+    };
+
+    let mut item_id = 0;
+    let items_len = self.items.len();
+    for item in self.items.iter_mut() {
+      let item_padding = item.get_padding();
+      let item_hv_size = remaining_size / (items_len - item_id) as IScalar;
+      let item_boundaries = match new_boundaries {
+        SizeBoundary::X(_) => {
+          SizeBoundary::X(item_hv_size - item_padding.x)
+        },
+        SizeBoundary::Y(_) => {
+          SizeBoundary::Y(item_hv_size - item_padding.y)
+        },
+        SizeBoundary::Both(size) => {
+          if self.orientation == BoxOrientation::VERTICAL {
+            SizeBoundary::Both(Vec3i::new2(
+              size.x - item_padding.x,
+              item_hv_size - item_padding.y
+            ))
+          } else {
+            SizeBoundary::Both(Vec3i::new2(
+              item_hv_size - item_padding.x,
+              size.y - item_padding.y,
+            ))
+          }
+        },
+        _ => {
+          panic!("This shouldn't happen");
+        }
+      };
+
+      item.widget.set_boundaries(item_boundaries);
+
+      let item_size = item.get_full_size(item.widget.get_size());
+      remaining_size -= if self.orientation == BoxOrientation::VERTICAL {
+        item_size.y
+      } else {
+        item_size.x
+      };
+
+      item_id += 1;
+    }
   }
 
   fn get_size(&self) -> Vec3i {
@@ -330,9 +471,11 @@ impl PauseMenu {
       boxc: BoxContainer::new(BoxOrientation::VERTICAL)
     };
 
-    pausemenu.boxc.add_item_ap(Box::new(TextWidget::new("The quick brown fox")), 0);
+    pausemenu.boxc.add_item_ap(Box::new(TextWidget::new("The quick  brown fox")), 0);
     pausemenu.boxc.add_item_ap(Box::new(TextWidget::new("jumps")), 30);
-    pausemenu.boxc.add_item_ap(Box::new(TextWidget::new("over the lazy dog.")), 0);
+    pausemenu.boxc.add_item_ap(Box::new(TextWidget::new("over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.")), 0);
+
+    pausemenu.boxc.set_boundaries(SizeBoundary::X(50));
 
     pausemenu
   }

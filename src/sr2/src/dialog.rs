@@ -1,10 +1,18 @@
 use super::*;
+use opensrme_common::*;
 
+
+// TODO: Some kind of way to lock focus, for example, when holding down a button (e.g. scrollbar bar)
+pub struct WidgetState {
+  lock_focus: bool
+}
 
 pub trait Widget {
-  fn input(&mut self, _event: input::InputKey) {}
+  fn input(&mut self, _event: Event) {}
   fn set_boundaries(&mut self, _size: Vec3i) {}
   fn get_size(&self) -> Vec3i { Vec3i::default() }
+  fn get_min_size(&self) -> Option<Vec3i> { None }
+  fn get_max_size(&self) -> Option<Vec3i> { None }
   fn draw(&self, _offset: Vec3i) {}
 }
 
@@ -53,18 +61,23 @@ impl Widget for Dialog {
   }
 
   fn get_size(&self) -> Vec3i {
-    self.size + DIALOG_PADDING * 2
+    self.widget.get_size() + DIALOG_PADDING * 2
+  }
+
+  fn get_min_size(&self) -> Option<Vec3i> {
+    Some(Vec3i::new2(DIALOG_MARGIN2, DIALOG_MARGIN2) + self.widget.get_min_size().unwrap_or(Vec3i::default()))
   }
 
   fn draw(&self, offset: Vec3i) {
     let context = globals::get_context();
 
-    let offset = offset + (self.boundaries - self.size) / 2;
+    let size = self.get_size();
+    let offset = offset + (self.boundaries - size) / 2;
 
     context.platform.set_color(Color { r: 0, g: 0, b: 0, a: 150 });
     context.platform.fill_rect(offset.x, offset.y,
-                               self.size.x,
-                               self.size.y);
+                               size.x,
+                               size.y);
 
     self.widget.draw(offset + DIALOG_PADDING);
   }
@@ -77,10 +90,15 @@ pub struct TextWidget {
 
 impl TextWidget {
   pub fn new(text: &str) -> Self {
-    TextWidget {
+    let mut widget = TextWidget {
       boundaries: Vec3i::default(),
       text: text.to_string()
-    }
+    };
+
+    let max_size = widget.get_max_size().unwrap();
+    widget.set_boundaries(max_size);
+
+    widget
   }
 
   pub fn set_text(&mut self, text: &str) {
@@ -94,7 +112,11 @@ impl Widget for TextWidget {
   }
 
   fn get_size(&self) -> Vec3i {
-    text::text_size(0, &self.text[..])
+    self.boundaries
+  }
+
+  fn get_max_size(&self) -> Option<Vec3i> {
+    Some(text::text_size(0, &self.text[..]))
   }
 
   fn draw(&self, offset: Vec3i) {
@@ -125,6 +147,13 @@ impl BoxItem {
       padding_right: right
     }
   }
+
+  fn get_full_size(&self, item_size: Vec3i) -> Vec3i {
+    Vec3i::new2(
+      self.padding_left + item_size.x + self.padding_right,
+      self.padding_top + item_size.y + self.padding_bottom
+    )
+  }
 }
 
 pub enum BoxOrientation {
@@ -138,14 +167,14 @@ pub struct BoxContainer {
 }
 
 impl BoxContainer {
-  fn new(orientation: BoxOrientation) -> BoxContainer {
+  pub fn new(orientation: BoxOrientation) -> BoxContainer {
     BoxContainer {
       orientation,
       items: Vec::new()
     }
   }
 
-  fn add_item(&mut self, widget: Box<Widget>,
+  pub fn add_item(&mut self, widget: Box<Widget>,
               top: IScalar,
               bottom: IScalar,
               left: IScalar,
@@ -153,35 +182,85 @@ impl BoxContainer {
     self.items.push(BoxItem::new(widget, top, bottom, left, right))
   }
 
-  fn add_item_ap(&mut self, widget: Box<Widget>, all: IScalar) {
+  pub fn add_item_ap(&mut self, widget: Box<Widget>, all: IScalar) {
     self.add_item(widget, all, all, all, all)
+  }
+
+  fn calc_size_increase(&self, size: Vec3i, item_size: Vec3i) -> Vec3i {
+    match self.orientation {
+      BoxOrientation::HORIZONTAL => {
+        Vec3i::new2(
+          item_size.x,
+          if item_size.y > size.y {
+            item_size.y - size.y
+          } else {
+            0
+          }
+        )
+      },
+      BoxOrientation::VERTICAL => {
+        Vec3i::new2(
+          if item_size.x > size.x {
+            item_size.x - size.x
+          } else {
+            0
+          },
+          item_size.y
+        )
+      }
+    }
   }
 }
 
 impl Widget for BoxContainer {
   // TODO: optimize duplicate get_size() calls
+  // TODO: set_boundaries, and proper sizing for children elements (min/max?)
 
   fn get_size(&self) -> Vec3i {
     let mut size = Vec3i::default();
 
     for item in self.items.iter() {
       let item_size = item.widget.get_size();
-      let size_x = item.padding_left + item_size.x + item.padding_right;
-      let size_y = item.padding_top + item_size.y + item.padding_bottom;
+      let full_item_size = item.get_full_size(item_size);
 
-      match self.orientation {
-        BoxOrientation::HORIZONTAL => {
-          size.x += size_x;
-          size.y = std::cmp::max(size.y, size_y);
+      size = size + self.calc_size_increase(size, full_item_size);
+    }
+
+    size
+  }
+
+  fn get_max_size(&self) -> Option<Vec3i> {
+    let mut size = Vec3i::default();
+
+    for item in self.items.iter() {
+      let item_size = item.widget.get_max_size();
+
+      match item_size {
+        Some(item_size) => {
+          let full_item_size = item.get_full_size(item_size);
+
+          size = size + self.calc_size_increase(size, full_item_size);
         },
-        BoxOrientation::VERTICAL => {
-          size.y += size_y;
-          size.x = std::cmp::max(size.x, size_x);
+        None => {
+          return None;
         }
       }
     }
 
-    size
+    Some(size)
+  }
+
+  fn get_min_size(&self) -> Option<Vec3i> {
+    let mut size = Vec3i::default();
+
+    for item in self.items.iter() {
+      let item_size = item.widget.get_max_size().unwrap_or(Vec3i::default());
+      let full_item_size = item.get_full_size(item_size);
+
+      size = size + self.calc_size_increase(size, full_item_size);
+    }
+
+    Some(size)
   }
 
   fn draw(&self, base_offset: Vec3i) {
@@ -234,6 +313,14 @@ impl PauseMenu {
 impl Widget for PauseMenu {
   fn get_size(&self) -> Vec3i {
     self.boxc.get_size()
+  }
+
+  fn get_max_size(&self) -> Option<Vec3i> {
+    self.boxc.get_max_size()
+  }
+
+  fn get_min_size(&self) -> Option<Vec3i> {
+    self.boxc.get_min_size()
   }
 
   fn draw(&self, offset: Vec3i) {

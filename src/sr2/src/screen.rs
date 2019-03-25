@@ -54,7 +54,7 @@ impl GameScreen {
     game.camera.size = Vec3i::new2(240, 320);
 
     game.dialogs.push(dialog::Dialog::new(Box::new(dialog::PauseMenu::new())));
-    game.dialogs[0].set_boundaries(context.platform.get_size());
+    game.dialogs[0].set_boundaries(dialog::SizeBoundary::Both(context.platform.get_size()));
 
     game
   }
@@ -432,7 +432,7 @@ impl Screen for GameScreen {
 
   fn set_size(&mut self, size: Vec3i) {
     for dialog in self.dialogs.iter_mut() {
-      dialog.set_boundaries(size);
+      dialog.set_boundaries(dialog::SizeBoundary::Both(size));
     }
   }
 

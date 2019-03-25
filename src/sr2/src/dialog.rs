@@ -7,9 +7,17 @@ pub struct WidgetState {
   lock_focus: bool
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum SizeBoundary {
+  None,
+  X(IScalar),
+  Y(IScalar),
+  Both(Vec3i)
+}
+
 pub trait Widget {
   fn input(&mut self, _event: Event) {}
-  fn set_boundaries(&mut self, _size: Vec3i) {}
+  fn set_boundaries(&mut self, _size: SizeBoundary) {}
   fn get_size(&self) -> Vec3i { Vec3i::default() }
   fn get_min_size(&self) -> Option<Vec3i> { None }
   fn get_max_size(&self) -> Option<Vec3i> { None }
@@ -22,7 +30,8 @@ const DIALOG_MARGIN2: IScalar = DIALOG_MARGIN * 2;
 const DIALOG_PADDING: IScalar = 10;
 
 pub struct Dialog {
-  boundaries: Vec3i,
+  boundaries: SizeBoundary,
+  boundaries_size: Vec3i,
   widget: Box<Widget>,
   size: Vec3i,
 }
@@ -32,7 +41,8 @@ impl Dialog {
     let size = widget.get_size() + DIALOG_PADDING * 2;
 
     Dialog {
-      boundaries: Vec3i::default(),
+      boundaries: SizeBoundary::None,
+      boundaries_size: Vec3i::default(),
       widget: widget,
       size
     }
@@ -40,24 +50,31 @@ impl Dialog {
 }
 
 impl Widget for Dialog {
-  fn set_boundaries(&mut self, new_boundaries: Vec3i) {
+  fn set_boundaries(&mut self, new_boundaries: SizeBoundary) {
     if new_boundaries == self.boundaries {
       return;
     }
 
+    let size = self.get_size();
+
     self.boundaries = new_boundaries;
 
-    if self.boundaries.x - self.size.x < DIALOG_MARGIN2 {
-      self.size.x = self.boundaries.x - DIALOG_MARGIN2;
+    if let SizeBoundary::Both(mut boundary) = new_boundaries {
+      self.boundaries_size = boundary;
+
+      if boundary.x - size.x < DIALOG_MARGIN2 {
+        boundary.x = boundary.x - DIALOG_MARGIN2;
+      }
+
+      if boundary.y - size.y < DIALOG_MARGIN2 {
+        boundary.y = boundary.y - DIALOG_MARGIN2;
+      }
+
+      self.widget.set_boundaries(SizeBoundary::Both(boundary - DIALOG_PADDING * 2));
+    } else {
+      // A dialog should always be top-level
+      panic!("Dialog.set_boundaries() should be SizeBoundary::Both");
     }
-
-    if self.boundaries.y - self.size.y < DIALOG_MARGIN2 {
-      self.size.y = self.boundaries.y - DIALOG_MARGIN2;
-    }
-
-    // TODO: expand
-
-    self.widget.set_boundaries(self.size - DIALOG_PADDING * 2);
   }
 
   fn get_size(&self) -> Vec3i {
@@ -72,7 +89,7 @@ impl Widget for Dialog {
     let context = globals::get_context();
 
     let size = self.get_size();
-    let offset = offset + (self.boundaries - size) / 2;
+    let offset = offset + (self.boundaries_size - size) / 2;
 
     context.platform.set_color(Color { r: 0, g: 0, b: 0, a: 150 });
     context.platform.fill_rect(offset.x, offset.y,
@@ -84,21 +101,16 @@ impl Widget for Dialog {
 }
 
 pub struct TextWidget {
-  boundaries: Vec3i,
+  boundaries: SizeBoundary,
   text: String
 }
 
 impl TextWidget {
   pub fn new(text: &str) -> Self {
-    let mut widget = TextWidget {
-      boundaries: Vec3i::default(),
+    TextWidget {
+      boundaries: SizeBoundary::None,
       text: text.to_string()
-    };
-
-    let max_size = widget.get_max_size().unwrap();
-    widget.set_boundaries(max_size);
-
-    widget
+    }
   }
 
   pub fn set_text(&mut self, text: &str) {
@@ -107,12 +119,16 @@ impl TextWidget {
 }
 
 impl Widget for TextWidget {
-  fn set_boundaries(&mut self, new_boundaries: Vec3i) {
+  fn set_boundaries(&mut self, new_boundaries: SizeBoundary) {
     self.boundaries = new_boundaries;
   }
 
   fn get_size(&self) -> Vec3i {
-    self.boundaries
+    match self.boundaries {
+      SizeBoundary::None => { self.get_max_size().unwrap() },
+      SizeBoundary::Both(size) => { size },
+      _ => { Vec3i::default() }
+    }
   }
 
   fn get_max_size(&self) -> Option<Vec3i> {
@@ -163,14 +179,16 @@ pub enum BoxOrientation {
 
 pub struct BoxContainer {
   orientation: BoxOrientation,
-  pub items: Vec<BoxItem>
+  pub items: Vec<BoxItem>,
+  boundaries: SizeBoundary
 }
 
 impl BoxContainer {
   pub fn new(orientation: BoxOrientation) -> BoxContainer {
     BoxContainer {
       orientation,
-      items: Vec::new()
+      items: Vec::new(),
+      boundaries: SizeBoundary::None
     }
   }
 
@@ -215,6 +233,16 @@ impl BoxContainer {
 impl Widget for BoxContainer {
   // TODO: optimize duplicate get_size() calls
   // TODO: set_boundaries, and proper sizing for children elements (min/max?)
+
+  fn set_boundaries(&mut self, new_boundaries: SizeBoundary) {
+    if new_boundaries == self.boundaries {
+      return;
+    }
+
+    self.boundaries = new_boundaries;
+
+    // TODO
+  }
 
   fn get_size(&self) -> Vec3i {
     let mut size = Vec3i::default();
